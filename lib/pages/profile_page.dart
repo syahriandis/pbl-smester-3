@@ -27,12 +27,12 @@ class ProfilePage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Image.asset('assets/images/logoputih.png',height: 50),
+                Image.asset('assets/images/logoputih.png', height: 50),
                 const CircleAvatar(
                   radius: 20,
                   backgroundImage: AssetImage('assets/images/avatar.jpg'),
                   backgroundColor: whiteColor,
-                )
+                ),
               ],
             ),
           ),
@@ -41,7 +41,7 @@ class ProfilePage extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: whiteColor,
-                borderRadius: BorderRadius.circular(16)
+                borderRadius: BorderRadius.circular(16),
               ),
               margin: const EdgeInsets.all(10),
               padding: const EdgeInsets.all(16),
@@ -50,34 +50,135 @@ class ProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "Profil",
-                      style : TextStyle(
+                      "Profile Warga",
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: primaryColor,
-                        ),
                       ),
-                    const SizedBox(height: 12,),
+                    ),
+                    const SizedBox(height: 12),
 
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: greyColor),
+                        border: Border.all(color: Colors.grey.shade300),
                       ),
                       child: Row(
                         children: [
                           ClipRRect(
-                            borderRadius : BorderRadius.circular(50),
+                            borderRadius: BorderRadius.circular(50),
                             child: Image.asset(
-                              'assets/image/avatar.jpg',
-                            height: 60,
-                            width: 60,
-                            fit: BoxFit.cover,
+                              'assets/images/avatar.jpg',
+                              height: 60,
+                              width: 60,
+                              fit: BoxFit.cover,
                             ),
                           ),
                           const SizedBox(width: 16),
+                          const Column(
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                              Text(
+                                'Dwiky Putra Silalahi',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text('Laki-laki'),
+                              Text('123456789'),
+                             ],
+                          ),
                         ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                   const Text(
+                      "Profile Keluarga",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Anggota keluarga",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Madisson Beer"),
+                              Text("My Wife"),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Aripin Beer"),
+                              Text("Anak")
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Ryan Gosling Beer"),
+                              Text("Anak"),
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            "Alamat",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text("Komplek Bengkong Wahyu Blok 2 No 100, Batam, Tj. Buntung, Kec. Bengkong, Kota Batam, Kepulauan Riau 29444")
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    const Text(
+                      "Edit Password",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: greyColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {},
+                        child: const Text(
+                          "Edit",
+                          style: TextStyle(
+                            color: whiteColor,
+                          ),
+                        ),
                       ),
                     )
                   ],
