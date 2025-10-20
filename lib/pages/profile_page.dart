@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout.dart';
+import 'package:login_tes/widgets/ganti_password_dialog.dart';
+
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -11,12 +13,12 @@ class ProfilePage extends StatelessWidget {
       selectedIndex: 3,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-        child: _buildBody(),
+        child: _buildBody(context),
       ),
     );
   }
 
-  Widget _buildBody() {
+ Widget _buildBody(BuildContext context) {
     return SafeArea(
       child: Column(
         children: [
@@ -172,7 +174,13 @@ class ProfilePage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => const GantiPasswordDialog(),
+                              );
+                            },
+
                         child: const Text(
                           "Edit",
                           style: TextStyle(
