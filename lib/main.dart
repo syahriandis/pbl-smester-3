@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
+import 'pages/dashboard_page.dart';
+import 'pages/layanan_surat_page.dart';
+import 'pages/layanan_pengaduan_page.dart';
+import 'pages/layanan_administrasi_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,7 +22,16 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF164E47)),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      
+      initialRoute: '/login',
+
+      routes: {
+        '/login': (context) => const LoginPage(),
+        '/dashboard': (context) => const DashboardPage(),
+        '/layananSurat': (context) => const LayananSuratPage(),
+        '/layananPengaduan': (context) => const LayananPengaduanPage(),
+        '/layananAdministrasi': (context) => const LayananAdministrasiPage(),
+      },
     );
   }
 }

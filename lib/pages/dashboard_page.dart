@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout.dart';
 
+
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
@@ -12,16 +13,12 @@ class DashboardPage extends StatelessWidget {
       selectedIndex: 0,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-        child: _buildBody(),
+        child: _buildBody(context),
       ),
     );
   }
 
-  Widget _buildBody() {
-    return _buildHomeScreen();
-  }
-
-  Widget _buildHomeScreen() {
+  Widget _buildBody(BuildContext context) {
     return SafeArea(
       child: Column(
         children: [
@@ -56,6 +53,7 @@ class DashboardPage extends StatelessWidget {
               ],
             ),
           ),
+
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -97,8 +95,8 @@ class DashboardPage extends StatelessWidget {
                             child: Center(
                               child: SvgPicture.asset(
                                 'assets/icons/whatsapp.svg',
-                                width: 60,
-                                height: 60,
+                                width: 40,
+                                height: 40,
                               ),
                             ),
                           ),
@@ -107,7 +105,7 @@ class DashboardPage extends StatelessWidget {
                             child: Text(
                               'Forum Komunikasi Warga',
                               style: TextStyle(
-                                color: Color.fromARGB(255, 252, 252, 252),
+                                color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
@@ -115,13 +113,15 @@ class DashboardPage extends StatelessWidget {
                           ),
                           const Icon(
                             Icons.chevron_right,
-                            color: Color.fromARGB(255, 255, 255, 255),
+                            color: Colors.white,
                             size: 24,
                           ),
                         ],
                       ),
                     ),
+
                     const SizedBox(height: 24),
+
                     Row(
                       children: const [
                         Icon(Icons.people_alt, color: primaryColor, size: 24),
@@ -136,38 +136,43 @@ class DashboardPage extends StatelessWidget {
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 10),
-                    Column(
-                      children: [
-                        _buildServiceCard(
-                          icon: Image(
-                            image:
-                                AssetImage('assets/images/pengajuansurat.png'),
-                            width: 32,
-                          ),
-                          title: 'Layanan Surat',
-                          subtitle: 'Pengajuan surat dengan mengisi form',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildServiceCard(
-                          icon: Image(
-                            image: AssetImage('assets/images/pengaduan.png'),
-                            width: 32,
-                          ),
-                          title: 'Layanan Pengaduan',
-                          subtitle: 'Forum pengaduan dengan mengisi form',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildServiceCard(
-                          icon: Image(
-                            image: AssetImage('assets/images/administrasi.png'),
-                            width: 32,
-                          ),
-                          title: 'Layanan Administrasi',
-                          subtitle: 'Dapat membayar uang iuran dan sebagainya',
-                        ),
-                      ],
+                    _buildServiceCard(
+                      context: context,
+                      icon: const Image(
+                        image: AssetImage('assets/images/pengajuansurat.png'),
+                        width: 32,
+                      ),
+                      title: 'Layanan Surat',
+                      subtitle: 'Pengajuan surat dengan mengisi form',
+                      routeName: '/layananSurat',
                     ),
+                    const SizedBox(height: 12),
+
+                    _buildServiceCard(
+                      context: context,
+                      icon: const Image(
+                        image: AssetImage('assets/images/pengaduan.png'),
+                        width: 32,
+                      ),
+                      title: 'Layanan Pengaduan',
+                      subtitle: 'Forum pengaduan dengan mengisi form',
+                      routeName: '/layananPengaduan',
+                    ),
+                    const SizedBox(height: 12),
+
+                    _buildServiceCard(
+                      context: context,
+                      icon: const Image(
+                        image: AssetImage('assets/images/administrasi.png'),
+                        width: 32,
+                      ),
+                      title: 'Layanan Administrasi',
+                      subtitle: 'Dapat membayar uang iuran dan sebagainya',
+                      routeName: '/layananAdministrasi',
+                    ),
+
                     const SizedBox(height: 30),
                   ],
                 ),
@@ -179,55 +184,71 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  static Widget _buildServiceCard({
-    required Widget icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(10),
+  Widget _buildServiceCard({
+  required BuildContext context,
+  required Widget icon,
+  required String title,
+  required String subtitle,
+  required String routeName,
+}) {
+  return Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: () => Navigator.pushNamed(context, routeName),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: whiteColor,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            child: Center(child: icon),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: primaryColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(child: icon),
             ),
-          ),
-          const Icon(Icons.chevron_right, color: primaryColor, size: 24),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: primaryColor, size: 24),
+          ],
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
