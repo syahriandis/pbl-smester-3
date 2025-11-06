@@ -33,7 +33,7 @@ class _MainLayoutState extends State<MainLayout> {
         page = const RiwayatPage();
         break;
       case 2:
-        page =  InformasiPage();
+        page = InformasiPage();
         break;
       case 3:
         page = const ProfilePage();
@@ -67,15 +67,11 @@ class _MainLayoutState extends State<MainLayout> {
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 5,
-              ),
+              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5),
             ],
           ),
           child: ClipRRect(
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: BottomNavigationBar(
               iconSize: 28,
               selectedItemColor: secondaryColor,
@@ -86,26 +82,34 @@ class _MainLayoutState extends State<MainLayout> {
               items: [
                 BottomNavigationBarItem(
                   icon: buildNavIcon('assets/icons/home.svg', greyColor),
-                  activeIcon:
-                      buildNavIcon('assets/icons/home.svg', secondaryColor),
+                  activeIcon: buildNavIcon(
+                    'assets/icons/home.svg',
+                    secondaryColor,
+                  ),
                   label: 'Beranda',
                 ),
                 BottomNavigationBarItem(
                   icon: buildNavIcon('assets/icons/history.svg', greyColor),
-                  activeIcon:
-                      buildNavIcon('assets/icons/history.svg', secondaryColor),
+                  activeIcon: buildNavIcon(
+                    'assets/icons/history.svg',
+                    secondaryColor,
+                  ),
                   label: 'Riwayat',
                 ),
                 BottomNavigationBarItem(
                   icon: buildNavIcon('assets/icons/info.svg', greyColor),
-                  activeIcon:
-                      buildNavIcon('assets/icons/info.svg', secondaryColor),
+                  activeIcon: buildNavIcon(
+                    'assets/icons/info.svg',
+                    secondaryColor,
+                  ),
                   label: 'Informasi',
                 ),
                 BottomNavigationBarItem(
                   icon: buildNavIcon('assets/icons/profile.svg', greyColor),
-                  activeIcon:
-                      buildNavIcon('assets/icons/profile.svg', secondaryColor),
+                  activeIcon: buildNavIcon(
+                    'assets/icons/profile.svg',
+                    secondaryColor,
+                  ),
                   label: 'Profil',
                 ),
               ],

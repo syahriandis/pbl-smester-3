@@ -20,31 +20,30 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
   String? _keperluan;
   File? _dokumen;
 
- Future<void> _pickFile() async {
-  final picker = ImagePicker();
-  final source = await showDialog<ImageSource>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("Pilih Sumber Gambar"),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, ImageSource.camera),
-          child: const Text("Kamera"),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, ImageSource.gallery),
-          child: const Text("Galeri"),
-        ),
-      ],
-    ),
-  );
+  Future<void> _pickFile() async {
+    final picker = ImagePicker();
+    final source = await showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Pilih Sumber Gambar"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, ImageSource.camera),
+            child: const Text("Kamera"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, ImageSource.gallery),
+            child: const Text("Galeri"),
+          ),
+        ],
+      ),
+    );
 
-  if (source != null) {
-    final picked = await picker.pickImage(source: source);
-    if (picked != null) setState(() => _dokumen = File(picked.path));
+    if (source != null) {
+      final picked = await picker.pickImage(source: source);
+      if (picked != null) setState(() => _dokumen = File(picked.path));
+    }
   }
-}
-
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
@@ -85,30 +84,37 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
                 value: _jenisSurat,
                 items: const [
                   DropdownMenuItem(
-                      value: 'Surat Izin Keramaian',
-                      child: Text('Surat Izin Keramaian')),
+                    value: 'Surat Izin Keramaian',
+                    child: Text('Surat Izin Keramaian'),
+                  ),
                   DropdownMenuItem(
-                      value: 'Surat Pindah', child: Text('Surat Pindah')),
-                  DropdownMenuItem(
-                      value: 'SKTM', child: Text('SKTM')),
+                    value: 'Surat Pindah',
+                    child: Text('Surat Pindah'),
+                  ),
+                  DropdownMenuItem(value: 'SKTM', child: Text('SKTM')),
                 ],
                 onChanged: (val) => setState(() => _jenisSurat = val),
-                validator: (val) =>
-                    val == null ? 'Pilih jenis surat' : null,
+                validator: (val) => val == null ? 'Pilih jenis surat' : null,
               ),
               const SizedBox(height: 12),
               _buildTextField('Nama Lengkap', (val) => _nama = val),
               _buildTextField('NIK', (val) => _nik = val),
               _buildTextField('Alamat', (val) => _alamat = val),
-              _buildTextField('Keperluan', (val) => _keperluan = val, maxLines: 3),
+              _buildTextField(
+                'Keperluan',
+                (val) => _keperluan = val,
+                maxLines: 3,
+              ),
               const SizedBox(height: 10),
               const Text("Upload Dokumen (KTP/KK):"),
               const SizedBox(height: 5),
               OutlinedButton(
                 onPressed: _pickFile,
-                child: Text(_dokumen == null
-                    ? "Pilih File"
-                    : _dokumen!.path.split('/').last),
+                child: Text(
+                  _dokumen == null
+                      ? "Pilih File"
+                      : _dokumen!.path.split('/').last,
+                ),
               ),
               const SizedBox(height: 15),
               Align(
@@ -125,15 +131,17 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
     );
   }
 
-  Widget _buildTextField(String label, Function(String?) onSaved,
-      {int maxLines = 1}) {
+  Widget _buildTextField(
+    String label,
+    Function(String?) onSaved, {
+    int maxLines = 1,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextFormField(
         maxLines: maxLines,
         decoration: InputDecoration(labelText: label),
-        validator: (val) =>
-            val == null || val.isEmpty ? 'Harus diisi' : null,
+        validator: (val) => val == null || val.isEmpty ? 'Harus diisi' : null,
         onSaved: onSaved,
       ),
     );
