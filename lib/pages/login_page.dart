@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:login_tes/constants/colors.dart';
-import 'dashboard_page.dart';
+import 'package:flutter/foundation.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,11 +16,11 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   bool _isLoading = false;
 
+  // Definisikan map _users dengan data yang benar
   final Map<String, String> _users = {
-    'admin': 'admin123',
-    'user': 'user123',
     'dwiky': 'password123',
     'warga': 'warga123',
+    'rtaja': 'apalah123', // Data untuk RT
   };
 
   @override
@@ -31,9 +31,18 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _onLoginPressed() async {
-    final username = _emailController.text.trim();
+    final username = _emailController.text
+        .trim()
+        .toLowerCase(); // Menghapus spasi tambahan
     final password = _passwordController.text;
 
+    // Debugging log untuk memastikan username yang dimasukkan
+    debugPrint('Attempting to login with username: $username');
+    debugPrint(
+      'Users in map: ${_users.keys.toList()}',
+    ); // Menampilkan semua username yang ada di map
+
+    // Mengecek apakah username dan password kosong
     if (username.isEmpty || password.isEmpty) {
       _showSnackBar('UserID dan password harus diisi');
       return;
@@ -43,22 +52,40 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
+    // Simulasi delay untuk memverifikasi
     await Future.delayed(const Duration(milliseconds: 1500));
+
+    // Pastikan widget masih terpasang sebelum melakukan setState atau navigasi
+    if (!mounted) return;
 
     setState(() {
       _isLoading = false;
     });
 
+    // Mengecek apakah username ada di dalam map _users
     if (_users.containsKey(username)) {
+      debugPrint('UserID ditemukan: $username'); // Debugging log
+
       if (_users[username] == password) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DashboardPage()),
-        );
+        debugPrint('Password benar');
+        // Arahkan ke halaman RT atau dashboard umum
+        if (username == 'rtaja') {
+          Navigator.pushReplacementNamed(
+            context,
+            '/rtDashboard',
+          ); // Halaman Dashboard RT
+        } else {
+          Navigator.pushReplacementNamed(
+            context,
+            '/dashboard',
+          ); // Halaman Dashboard Umum
+        }
       } else {
+        debugPrint('Password salah');
         _showSnackBar('Password salah!');
       }
     } else {
+      debugPrint('UserID tidak ditemukan');
       _showSnackBar('UserID tidak ditemukan!');
     }
   }
@@ -69,9 +96,7 @@ class _LoginPageState extends State<LoginPage> {
         content: Text(message),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -101,10 +126,7 @@ class _LoginPageState extends State<LoginPage> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'silahkan masukkan userid dan password kamu',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: greyColor,
-                  ),
+                  style: TextStyle(fontSize: 13, color: greyColor),
                 ),
               ),
               const SizedBox(height: 32),
@@ -112,7 +134,8 @@ class _LoginPageState extends State<LoginPage> {
               Image.asset(
                 'assets/images/logo.png',
                 width: 120,
-                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.shrink(),
               ),
               const SizedBox(height: 32),
 
@@ -149,7 +172,10 @@ class _LoginPageState extends State<LoginPage> {
                         hintText: 'Masukkan UserID',
                         fillColor: whiteColor,
                         filled: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
@@ -170,14 +196,19 @@ class _LoginPageState extends State<LoginPage> {
                         hintText: 'Masukkan password',
                         fillColor: whiteColor,
                         filled: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: greyColor,
                           ),
                           onPressed: () {
@@ -201,7 +232,10 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: _onLoginPressed,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
-                        padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 80,
+                          vertical: 15,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -217,7 +251,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
 
               const SizedBox(height: 20),
-
             ],
           ),
         ),
