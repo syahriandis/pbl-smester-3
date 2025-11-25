@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:login_tes/constants/colors.dart';
 import 'dashboard_page.dart';
+import 'dashboard_security_page.dart'; // pastikan import halaman security
+
+import 'package:login_tes/constants/colors.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,6 +23,7 @@ class _LoginPageState extends State<LoginPage> {
     'user': 'user123',
     'dwiky': 'password123',
     'warga': 'warga123',
+    'security': 'security123', // tambah user security
   };
 
   @override
@@ -51,10 +54,18 @@ class _LoginPageState extends State<LoginPage> {
 
     if (_users.containsKey(username)) {
       if (_users[username] == password) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DashboardPage()),
-        );
+        // Cek role/security
+        if (username == 'security') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const DashboardSecurityPage()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const DashboardPage()),
+          );
+        }
       } else {
         _showSnackBar('Password salah!');
       }
@@ -217,7 +228,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
 
               const SizedBox(height: 20),
-
             ],
           ),
         ),

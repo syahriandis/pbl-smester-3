@@ -4,7 +4,8 @@ import 'pages/dashboard_page.dart';
 import 'pages/layanan_surat_page.dart';
 import 'pages/layanan_pengaduan_page.dart';
 import 'pages/layanan_administrasi_page.dart';
-
+import 'pages/dashboard_security_page.dart';
+import 'pages/layanan_pengaduan_Warga_page.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -31,7 +32,11 @@ class MyApp extends StatelessWidget {
         '/layananSurat': (context) => const LayananSuratPage(),
         '/layananPengaduan': (context) => const LayananPengaduanPage(),
         '/layananAdministrasi': (context) => const LayananAdministrasiPage(),
-      },
+
+        //Serurity
+        '/DashboardSecurity': (context) => const DashboardSecurityPage(),
+        '/layananPengaduanWarga': (context) => const LayananPengaduanWargaPage(),
+        }
     );
   }
 }
