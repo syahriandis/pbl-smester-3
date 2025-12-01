@@ -147,7 +147,7 @@ class DashboardSecurityPage extends StatelessWidget {
                       ),
                       title: 'Layanan Surat',
                       subtitle: 'Pengajuan surat dengan mengisi form',
-                      routeName: '/layananSurat',
+                      routeName: '/layananSuratSecurity',
                     ),
                     const SizedBox(height: 12),
 
@@ -161,7 +161,7 @@ class DashboardSecurityPage extends StatelessWidget {
                       ),
                       title: 'Layanan Administrasi',
                       subtitle: 'Dapat membayar uang iuran dan sebagainya',
-                      routeName: '/layananAdministrasi',
+                      routeName: '/LayananAdministrasiSecurity',
                     ),
                     const SizedBox(height: 12),
 

@@ -52,7 +52,7 @@ class ProfileSecurityPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "Profile Warga",
+                      "Profile Security",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -83,7 +83,7 @@ class ProfileSecurityPage extends StatelessWidget {
                              crossAxisAlignment: CrossAxisAlignment.start,
                              children: [
                               Text(
-                                'Dwiky Putra Silalahi',
+                                'Syahrianndi Sitanggang',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,

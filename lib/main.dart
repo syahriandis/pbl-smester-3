@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
 
-// === IMPORT DARI FRONTEND ===
+//Frondend
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/layanan_surat_page.dart';
-import 'pages/layanan_pengaduan_page.dart' as LayananPengaduanPageFrontend;
+import 'pages/layanan_pengaduan_page.dart'
+    as LayananPengaduanFrontend;
 import 'pages/layanan_administrasi_page.dart';
-import 'pages/dashboard_security_page.dart';
-import 'pages/layanan_pengaduan_Warga_page.dart';
 
-// === IMPORT DARI MAIN ===
+//security
+import 'pages/dashboard_security_page.dart';
+import 'pages/layanan_pengaduan_warga_page.dart';
+import 'pages/layanan_administrasi_security.dart';
+import 'pages/layanan_surat_security_page.dart';
+import 'pages/profile_security_page.dart';
+
+
+//rt
 import 'package:login_tes/pages/dashboard_page_rt.dart';
 import 'package:login_tes/pages/riwayat_page_rt.dart';
 import 'package:login_tes/pages/profile_page_rt.dart';
 import 'package:login_tes/pages/layanan_surat_page_rt.dart';
-import 'package:login_tes/pages/layanan_pengaduan_page.dart'
-    as LayananPengaduanPageMain;
 import 'package:login_tes/pages/layanan_pengaduan_page_rt.dart'
-    as LayananPengaduanPageRT;
+    as LayananPengaduanMain;
+import 'package:login_tes/pages/layanan_pengaduan_page_rt.dart'
+    as LayananPengaduanRT;
 import 'package:login_tes/pages/layanan_administrasi_page_rt.dart';
 
 void main() {
@@ -34,37 +41,46 @@ class MyApp extends StatelessWidget {
       title: 'Hawaii Garden',
       theme: ThemeData(
         fontFamily: 'Roboto',
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF164E47),
-        ),
+        colorScheme:
+            ColorScheme.fromSeed(seedColor: const Color(0xFF164E47)),
         useMaterial3: true,
       ),
+
+      // ROUTE DEFAULT
       initialRoute: '/login',
+
       routes: {
-        // === ROUTE FRONTEND ===
+        // ---------- FRONTEND ----------
         '/login': (context) => const LoginPage(),
         '/dashboard': (context) => const DashboardPage(),
         '/layananSurat': (context) => const LayananSuratPage(),
-        '/layananPengaduan': (context) =>
-            const LayananPengaduanPageFrontend.LayananPengaduanPage(),
+        '/layananPengaduan': (context) =>const LayananPengaduanFrontend.LayananPengaduanPage(),  
         '/layananAdministrasi': (context) => const LayananAdministrasiPage(),
+       
 
-        // Security
-        '/DashboardSecurity': (context) => const DashboardSecurityPage(),
-        '/layananPengaduanWarga': (context) =>
-            const LayananPengaduanWargaPage(),
+            
+        // ---------- SECURITY ----------
+        '/dashboardSecurity': (context) => const DashboardSecurityPage(),
+        '/layananPengaduanWarga': (context) =>  const LayananPengaduanWargaPage(),
+        '/LayananAdministrasiSecurity': (context) => const LayananAdministrasiSecurityPage(),
+        '/layananSuratSecurity': (context) => const LayananSuratSecurityPage(),
+        '/profileSecurity': (context) => const ProfileSecurityPage(),
+            
+        
+           
 
-        // === ROUTE RT (dari main) ===
+        // ---------- RT ----------
         '/rtDashboard': (context) => const DashboardPageRT(),
         '/riwayatRT': (context) => const RiwayatPageRT(),
         '/profileRT': (context) => const ProfilePageRT(),
         '/layananSuratRT': (context) => const LayananSuratPageRT(),
         '/layananPengaduanRT': (context) =>
-            LayananPengaduanPageRT.LayananPengaduanPageRT(),
+            LayananPengaduanRT.LayananPengaduanPageRT(),
         '/layananAdministrasiRT': (context) =>
             const LayananAdministrasiPageRT(),
       },
 
+      // ---------- 404 HANDLER ----------
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
           builder: (_) => const NotFoundPage(),
@@ -74,6 +90,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// ====== PAGE 404 ======
 class NotFoundPage extends StatelessWidget {
   const NotFoundPage({super.key});
 
@@ -81,7 +98,12 @@ class NotFoundPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Page Not Found')),
-      body: const Center(child: Text('404: Halaman Tidak Ditemukan')),
+      body: const Center(
+        child: Text(
+          '404: Halaman Tidak Ditemukan',
+          style: TextStyle(fontSize: 18),
+        ),
+      ),
     );
   }
 }
