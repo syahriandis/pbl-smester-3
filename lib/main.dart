@@ -12,7 +12,6 @@ import 'pages/layanan_pengaduan_Warga_page.dart';
 // === IMPORT DARI MAIN ===
 import 'package:login_tes/pages/dashboard_page_rt.dart';
 import 'package:login_tes/pages/riwayat_page_rt.dart';
-import 'package:login_tes/pages/profile_page_rt.dart';
 import 'package:login_tes/pages/layanan_surat_page_rt.dart';
 import 'package:login_tes/pages/layanan_pengaduan_page.dart'
     as LayananPengaduanPageMain;
@@ -57,7 +56,6 @@ class MyApp extends StatelessWidget {
         // === ROUTE RT (dari main) ===
         '/rtDashboard': (context) => const DashboardPageRT(),
         '/riwayatRT': (context) => const RiwayatPageRT(),
-        '/profileRT': (context) => const ProfilePageRT(),
         '/layananSuratRT': (context) => const LayananSuratPageRT(),
         '/layananPengaduanRT': (context) =>
             LayananPengaduanPageRT.LayananPengaduanPageRT(),
