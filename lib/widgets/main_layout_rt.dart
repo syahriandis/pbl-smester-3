@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/pages/dashboard_page_rt.dart';
 import 'package:login_tes/pages/riwayat_page_rt.dart';
-import 'package:login_tes/pages/profile_page_rt.dart';
+import 'package:login_tes/pages/profile_page.dart';
 import 'package:login_tes/pages/informasi_page_rt.dart';
 
 class MainLayoutRT extends StatefulWidget {
@@ -36,7 +36,7 @@ class _MainLayoutRTState extends State<MainLayoutRT> {
         page = const InformasiPageRT(); // Halaman Informasi RT
         break;
       case 3:
-        page = const ProfilePageRT(); // Halaman Profil RT
+        page = const ProfilePage(); // Halaman Profil RT
         break;
       default:
         page = const DashboardPageRT(); // Default ke Halaman Beranda RT

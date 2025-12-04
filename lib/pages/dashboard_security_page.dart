@@ -122,7 +122,6 @@ class DashboardSecurityPage extends StatelessWidget {
 
                     const SizedBox(height: 24),
 
-                    // Layanan Security
                     Row(
                       children: const [
                         Icon(Icons.people_alt, color: primaryColor, size: 24),
@@ -147,11 +146,9 @@ class DashboardSecurityPage extends StatelessWidget {
                       ),
                       title: 'Layanan Surat',
                       subtitle: 'Pengajuan surat dengan mengisi form',
-                      routeName: '/layananSurat',
+                      routeName: '/layananSuratSecurity',
                     ),
                     const SizedBox(height: 12),
-
-                    
 
                     _buildServiceCard(
                       context: context,
@@ -161,11 +158,10 @@ class DashboardSecurityPage extends StatelessWidget {
                       ),
                       title: 'Layanan Administrasi',
                       subtitle: 'Dapat membayar uang iuran dan sebagainya',
-                      routeName: '/layananAdministrasi',
+                      routeName: '/LayananAdministrasiSecurity',
                     ),
                     const SizedBox(height: 12),
 
-                    // Tambahan fitur: Layanan Pengaduan Warga
                     _buildServiceCard(
                       context: context,
                       icon: const Icon(Icons.report, size: 32, color: primaryColor),

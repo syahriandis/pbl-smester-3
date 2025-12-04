@@ -52,14 +52,56 @@ class _LayananPengaduanWargaPageState
     },
   ];
 
+  // =========================================================
+  // VALIDASI FOTO: hanya JPG/JPEG/PNG dan maksimal 5MB
+  // =========================================================
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+
     if (picked != null) {
+      final file = File(picked.path);
+
+      // Ambil ekstensi file
+      final extension = picked.name.split('.').last.toLowerCase();
+
+      // Validasi format file
+      if (extension != "jpg" &&
+          extension != "jpeg" &&
+          extension != "png") {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Format foto harus JPG, JPEG, atau PNG"),
+          ),
+        );
+        return;
+      }
+
+      // Validasi ukuran file maksimal 5MB
+      final fileSize = await file.length();
+      const maxSize = 5 * 1024 * 1024; // 5 MB
+
+      if (fileSize > maxSize) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Ukuran foto maksimal 5 MB"),
+          ),
+        );
+        return;
+      }
+
       setState(() {
-        selectedImage = File(picked.path);
+        selectedImage = file;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Foto berhasil dipilih"),
+        ),
+      );
     }
   }
+
+  // =========================================================
 
   void _ubahStatusPengaduan(Map<String, dynamic> pengaduan, String statusBaru) {
     setState(() {
@@ -91,7 +133,7 @@ class _LayananPengaduanWargaPageState
                 Text('Tanggal: ${pengaduan['tanggal']}'),
                 const SizedBox(height: 16),
 
-                // JIKA MASIH DIPROSES → ADA FEEDBACK + FOTO
+                // Jika masih diproses
                 if (pengaduan['status'] == 'Diproses') ...[
                   const Text(
                     "Kirim Feedback ke Warga:",
@@ -114,6 +156,7 @@ class _LayananPengaduanWargaPageState
                     "Lampirkan Foto (opsional):",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
+
                   const SizedBox(height: 6),
 
                   Row(
@@ -128,7 +171,19 @@ class _LayananPengaduanWargaPageState
                     ],
                   ),
 
+                  // 🔥 KETERANGAN FORMAT & UKURAN
+                  const SizedBox(height: 6),
+                  const Text(
+                    "Format foto: JPG, JPEG, PNG — Maksimal ukuran 5 MB",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+
                   const SizedBox(height: 20),
+
                   const Text(
                     "Ubah Status Pengaduan:",
                     style: TextStyle(fontWeight: FontWeight.bold),
@@ -169,18 +224,18 @@ class _LayananPengaduanWargaPageState
                   ),
                 ],
 
-                // ============================
-                // RIWAYAT → TAMPILKAN FEEDBACK & FOTO
-                // ============================
+                // TAMPILAN RIWAYAT (Selesai/Batal)
                 if (pengaduan['status'] != 'Diproses') ...[
                   const SizedBox(height: 20),
-                  const Text("Feedback:", style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text("Feedback:",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   Text(pengaduan['feedback'].isEmpty
                       ? "Tidak ada feedback"
                       : pengaduan['feedback']),
                   const SizedBox(height: 16),
 
-                  const Text("Foto:", style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text("Foto:",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
 
                   if (pengaduan['foto'] != null)
@@ -199,7 +254,6 @@ class _LayananPengaduanWargaPageState
             if (pengaduan['status'] == 'Diproses')
               TextButton(
                 onPressed: () {
-                  // SIMPAN FEEDBACK & FOTO → NEW
                   setState(() {
                     pengaduan['feedback'] = feedbackController.text;
                     pengaduan['foto'] = selectedImage?.path;
@@ -212,7 +266,6 @@ class _LayananPengaduanWargaPageState
                 },
                 child: const Text('Kirim'),
               ),
-
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Tutup'),

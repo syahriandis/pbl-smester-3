@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout_security.dart';
 
-class RiwayatsecurityPage extends StatelessWidget {
+class RiwayatsecurityPage extends StatefulWidget {
   const RiwayatsecurityPage({super.key});
+
+  @override
+  _RiwayatsecurityPageState createState() => _RiwayatsecurityPageState();
+}
+
+class _RiwayatsecurityPageState extends State<RiwayatsecurityPage> {
+  DateTime _selectedDate = DateTime.now(); // Default date
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +27,7 @@ class RiwayatsecurityPage extends StatelessWidget {
     return SafeArea(
       child: Column(
         children: [
+          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -37,6 +45,7 @@ class RiwayatsecurityPage extends StatelessWidget {
             ),
           ),
 
+          // Body Content
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -57,8 +66,12 @@ class RiwayatsecurityPage extends StatelessWidget {
                         color: primaryColor,
                       ),
                     ),
-                    const SizedBox(height: 16),
 
+                    const SizedBox(height: 16),
+                    _buildDatePicker(),
+                    const SizedBox(height: 20),
+
+                    // Data contoh
                     _buildDateSection("31 Agustus 2025", [
                       _buildTransactionItem("Uang Sampah", "Rp10.000"),
                       _buildTransactionItem("Uang Keamanan", "Rp15.000"),
@@ -79,6 +92,40 @@ class RiwayatsecurityPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildDatePicker() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "Tanggal: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}",
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.calendar_today),
+          onPressed: _selectDate,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
   }
 
   Widget _buildDateSection(String date, List<Widget> transactions) {
@@ -146,3 +193,4 @@ class RiwayatsecurityPage extends StatelessWidget {
     );
   }
 }
+

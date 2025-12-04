@@ -4,7 +4,7 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/pages/dashboard_security_page.dart';
 import 'package:login_tes/pages/riwayat_security_page.dart';
 import 'package:login_tes/pages/informasi_security_page.dart';
-import 'package:login_tes/pages/profile_security_page.dart';
+import 'package:login_tes/pages/profile_page.dart';
 
 class MainLayoutSecurity extends StatefulWidget {
   final int selectedIndex;
@@ -36,7 +36,7 @@ class _MainLayoutSecurityState extends State<MainLayoutSecurity> {
         page = const InformasiSecurityPage();
         break;
       case 3:
-        page = const ProfileSecurityPage();
+        page = const ProfilePage();
         break;
       default:
         page = const DashboardSecurityPage();
