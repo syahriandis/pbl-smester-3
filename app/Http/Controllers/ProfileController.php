@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-use App\Models\Family;
 
 class ProfileController extends Controller
 {
@@ -28,7 +27,7 @@ class ProfileController extends Controller
                         "nama" => $f->nama,
                         "hubungan" => $f->hubungan,
                     ];
-                })->values()->all(), // ✅ penting agar Flutter bisa baca
+                })->values()->all(),
             ]
         ]);
     }
@@ -63,25 +62,19 @@ class ProfileController extends Controller
     public function updatePassword(Request $request)
     {
         $request->validate([
-            "password_lama" => "required",
-            "password_baru" => "required|min:6",
+            'old_password' => 'required',
+            'new_password' => 'required|min:6',
         ]);
 
         $user = $request->user();
 
-        if (!Hash::check($request->password_lama, $user->password)) {
-            return response()->json([
-                "success" => false,
-                "message" => "Password lama salah"
-            ], 400);
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json(['message' => 'Password lama salah'], 400);
         }
 
-        $user->password = Hash::make($request->password_baru);
+        $user->password = Hash::make($request->new_password);
         $user->save();
 
-        return response()->json([
-            "success" => true,
-            "message" => "Password berhasil diubah"
-        ]);
+        return response()->json(['message' => 'Password berhasil diubah']);
     }
 }
