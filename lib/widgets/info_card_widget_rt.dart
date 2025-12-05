@@ -36,12 +36,19 @@ class InfoCardWidgetRT extends StatelessWidget {
         contentPadding: const EdgeInsets.all(12),
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.asset(
-            imagePath,
-            width: 60,
-            height: 60,
-            fit: BoxFit.cover,
-          ),
+          child: imagePath.isNotEmpty && imagePath.startsWith('http')
+              ? Image.network(
+                  imagePath,
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                )
+              : Image.asset(
+                  imagePath.isNotEmpty ? imagePath : "assets/images/default.jpg",
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                ),
         ),
         title: Text(
           title,
@@ -51,7 +58,10 @@ class InfoCardWidgetRT extends StatelessWidget {
             fontSize: 16,
           ),
         ),
-        subtitle: Text(subtitle, style: const TextStyle(color: greyColor)),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(color: Colors.white70),
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

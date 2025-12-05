@@ -1,117 +1,106 @@
 import 'package:flutter/material.dart';
 import 'package:login_tes/constants/colors.dart';
 
-class InfoDetailDialogRt extends StatelessWidget {
-  final String imagePath;
-  final String title;
-  final String date;
-  final String day;
-  final String time;
-  final String location;
-
-  const InfoDetailDialogRt({
-    super.key,
-    required this.imagePath,
-    required this.title,
-    required this.date,
-    required this.day,
-    required this.time,
-    required this.location,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+void showInfoDetailDialog(BuildContext context, Map<String, dynamic> info) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: SingleChildScrollView(
+          padding: const EdgeInsets.all(18),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
+              // ================= Gambar =================
               ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(imagePath, height: 160, fit: BoxFit.cover),
+                borderRadius: BorderRadius.circular(12),
+                child: (info['image'] != null && info['image'].toString().isNotEmpty)
+                    ? (info['image'].toString().startsWith('http')
+                        ? Image.network(
+                            info['image'],
+                            height: 180,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            info['image'],
+                            height: 180,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ))
+                    : Image.asset(
+                        "assets/images/default.jpg", // fallback default
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
               ),
               const SizedBox(height: 16),
-              _buildInfoBox(title, bold: true),
-              _buildInfoBox(date),
-              _buildInfoBox(day),
-              _buildInfoBox(time),
-              _buildInfoBox(location, maxLines: 2),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    "CLOSE",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+
+              // ================= Judul =================
+              Text(
+                info['title'] ?? 'Tanpa Judul',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
                 ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // ================= Lokasi =================
+              Row(
+                children: [
+                  const Icon(Icons.location_on, color: primaryColor),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      info['location'] ?? '-',
+                      style: const TextStyle(fontSize: 14, color: Colors.black87),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // ================= Tanggal + Hari + Jam =================
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today, color: primaryColor),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      "${info['day'] ?? ''}, ${info['date'] ?? ''} ${info['time'] ?? ''}",
+                      style: const TextStyle(fontSize: 14, color: Colors.black87),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // ================= Deskripsi =================
+              Text(
+                info['description'] ?? 'Tidak ada deskripsi',
+                style: const TextStyle(fontSize: 14, color: Colors.black87),
+                textAlign: TextAlign.justify,
+              ),
+              const SizedBox(height: 20),
+
+              // ================= Tombol Tutup =================
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Tutup", style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfoBox(String text, {int maxLines = 1, bool bold = false}) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor.withOpacity(0.6), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 3,
-            offset: const Offset(1, 2),
-          ),
-        ],
-      ),
-      child: Text(
-        text,
-        maxLines: maxLines,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
-          color: Colors.black87,
-        ),
-      ),
-    );
-  }
-}
-
-void showInfoDetailDialog(BuildContext context, Map<String, String> info) {
-  showDialog(
-    context: context,
-    builder: (context) => InfoDetailDialogRt(
-      imagePath: info['image']!,
-      title: info['title']!,
-      date: '04/09/2025',
-      day: 'Minggu',
-      time: '14.00 s/d selesai',
-      location: info['location']!,
-    ),
+      );
+    },
   );
 }
