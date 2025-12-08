@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout.dart';
-import 'package:login_tes/widgets/info_card_widget_rt.dart'; // gunakan versi RT dengan edit/delete
+import 'package:login_tes/widgets/info_card_widget_rt.dart';
 import 'package:login_tes/widgets/info_detail_dialog_rt.dart';
 import 'package:login_tes/widgets/info_create_dialog.dart';
 
@@ -19,7 +19,7 @@ class InformasiPageRT extends StatefulWidget {
 class _InformasiPageRTState extends State<InformasiPageRT> {
   List<Map<String, dynamic>> _listInformasi = [];
   bool _isLoading = true;
-  String userRole = "rt"; // role user
+  String userRole = "rt";
 
   @override
   void initState() {
@@ -30,16 +30,13 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
   /// Fetch data dari backend Laravel
   Future<void> _loadInformasi() async {
     setState(() => _isLoading = true);
-
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
       final response = await http.get(
         Uri.parse('http://127.0.0.1:8000/api/informasi'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
@@ -82,9 +79,7 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
 
       final response = await http.delete(
         Uri.parse('http://127.0.0.1:8000/api/informasi/$id'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
@@ -101,6 +96,40 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error hapus informasi: $e")),
+        );
+      }
+    }
+  }
+
+  /// Update informasi
+  Future<void> _updateInformasi(int id, Map<String, dynamic> updated) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final response = await http.put(
+        Uri.parse('http://127.0.0.1:8000/api/informasi/$id'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(updated),
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Informasi berhasil diupdate.")),
+          );
+        }
+        _loadInformasi();
+      } else {
+        throw Exception("Gagal update informasi (${response.statusCode})");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error update informasi: $e")),
         );
       }
     }
@@ -139,7 +168,6 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
               ],
             ),
           ),
-
           // Body
           Expanded(
             child: Container(
@@ -218,8 +246,12 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
                                   title: info["title"] ?? "",
                                   subtitle: info["location"] ?? "",
                                   onEdit: () {
-                                    // TODO: implement edit dialog
-                                    showInfoDetailDialog(context, info);
+                                    showInfoDetailDialog(
+                                      context,
+                                      info,
+                                      (updated) => _updateInformasi(info["id"], updated),
+                                      (id) => _deleteInformasi(id),
+                                    );
                                   },
                                   onDelete: () => _deleteInformasi(info["id"]),
                                 );

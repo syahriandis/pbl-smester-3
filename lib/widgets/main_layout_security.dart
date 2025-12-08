@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/pages/dashboard_security_page.dart';
 import 'package:login_tes/pages/riwayat_security_page.dart';
-import 'package:login_tes/pages/informasi_security_page.dart';
+import 'package:login_tes/pages/informasi_page.dart';
 import 'package:login_tes/pages/profile_page.dart';
 
 class MainLayoutSecurity extends StatefulWidget {
@@ -33,7 +33,7 @@ class _MainLayoutSecurityState extends State<MainLayoutSecurity> {
         page = const RiwayatsecurityPage ();
         break;
       case 2:
-        page = const InformasiSecurityPage();
+        page = const InformasiPage();
         break;
       case 3:
         page = const ProfilePage();

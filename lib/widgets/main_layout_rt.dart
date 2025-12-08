@@ -5,7 +5,7 @@ import 'package:login_tes/pages/dashboard_page_rt.dart';
 import 'package:login_tes/pages/riwayat_page_rt.dart';
 import 'package:login_tes/pages/profile_page.dart';
 import 'package:login_tes/pages/informasi_page_rt.dart';
-import 'package:login_tes/widgets/info_detail_dialog_rt.dart';
+import 'package:login_tes/widgets/info_edit_detail.dart';
 
 class MainLayoutRT extends StatefulWidget {
   final int selectedIndex;

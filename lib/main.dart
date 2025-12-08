@@ -69,7 +69,6 @@ class MyApp extends StatelessWidget {
             const LayananAdministrasiPageRT(),
       },
 
-      // ---------- 404 HANDLER ----------
       onUnknownRoute: (settings) {
         return MaterialPageRoute(builder: (_) => const NotFoundPage());
       },
