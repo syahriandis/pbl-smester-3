@@ -9,19 +9,18 @@ class Informasi extends Model
 {
     use HasFactory;
 
-    protected $table = 'informasis';
-
     protected $fillable = [
         'user_id',
         'title',
-        'image',
+        'description',
         'date',
-        'time',
         'day',
+        'time',
         'location',
-        'description'
+        'image',
     ];
 
+    // Relasi ke user (RT/RW yang buat informasi)
     public function user()
     {
         return $this->belongsTo(User::class);

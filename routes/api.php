@@ -5,13 +5,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FamilyController;
+
 use App\Http\Controllers\InformasiController;
 
+// Semua route ini butuh autentikasi (token)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/informasi', [InformasiController::class, 'index']);   // warga lihat
-    Route::post('/informasi', [InformasiController::class, 'store']);  // RT/RW buat
-    Route::put('/informasi/{id}', [InformasiController::class, 'update']); // RT/RW edit
-    Route::delete('/informasi/{id}', [InformasiController::class, 'destroy']); // RT/RW hapus
+    Route::get('/informasi', [InformasiController::class, 'index']);
+    Route::post('/informasi', [InformasiController::class, 'store']);
+    Route::put('/informasi/{id}', [InformasiController::class, 'update']);
+    Route::delete('/informasi/{id}', [InformasiController::class, 'destroy']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
