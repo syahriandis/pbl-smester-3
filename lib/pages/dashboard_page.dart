@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout.dart';
+import 'package:login_tes/utils/user_storage.dart';
 
 
 class DashboardPage extends StatelessWidget {
@@ -42,13 +43,21 @@ class DashboardPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Selamat Datang Dwiky Putra',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: whiteColor,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final profile = UserStorage.getCurrentUserProfile();
+                    final nama = profile?.nama ?? 'User';
+                    // Ambil nama depan saja jika ada spasi
+                    final namaDepan = nama.split(' ').first;
+                    return Text(
+                      'Selamat Datang $namaDepan',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: whiteColor,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/layanan_surat_page.dart';
-import 'pages/layanan_pengaduan_page.dart'
-    as LayananPengaduanFrontend;
+import 'pages/layanan_pengaduan_page.dart' as LayananPengaduanFrontend;
 import 'pages/layanan_administrasi_page.dart';
 
 //security
@@ -14,13 +13,10 @@ import 'pages/layanan_pengaduan_warga_page.dart';
 import 'pages/layanan_administrasi_security.dart';
 import 'pages/layanan_surat_security_page.dart';
 
-
 //rt
 import 'package:login_tes/pages/dashboard_page_rt.dart';
 import 'package:login_tes/pages/riwayat_page_rt.dart';
 import 'package:login_tes/pages/layanan_surat_page_rt.dart';
-import 'package:login_tes/pages/layanan_pengaduan_page_rt.dart'
-    as LayananPengaduanMain;
 import 'package:login_tes/pages/layanan_pengaduan_page_rt.dart'
     as LayananPengaduanRT;
 import 'package:login_tes/pages/layanan_administrasi_page_rt.dart';
@@ -39,8 +35,7 @@ class MyApp extends StatelessWidget {
       title: 'Hawaii Garden',
       theme: ThemeData(
         fontFamily: 'Roboto',
-        colorScheme:
-            ColorScheme.fromSeed(seedColor: const Color(0xFF164E47)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF164E47)),
         useMaterial3: true,
       ),
 
@@ -52,15 +47,18 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/dashboard': (context) => const DashboardPage(),
         '/layananSurat': (context) => const LayananSuratPage(),
-        '/layananPengaduan': (context) =>const LayananPengaduanFrontend.LayananPengaduanPage(),  
+        '/layananPengaduan': (context) =>
+            const LayananPengaduanFrontend.LayananPengaduanPage(),
         '/layananAdministrasi': (context) => const LayananAdministrasiPage(),
-            
+
         // ---------- SECURITY ----------
         '/dashboardSecurity': (context) => const DashboardSecurityPage(),
-        '/layananPengaduanWarga': (context) =>  const LayananPengaduanWargaPage(),
-        '/LayananAdministrasiSecurity': (context) => const LayananAdministrasiSecurityPage(),
+        '/layananPengaduanWarga': (context) =>
+            const LayananPengaduanWargaPage(),
+        '/LayananAdministrasiSecurity': (context) =>
+            const LayananAdministrasiSecurityPage(),
         '/layananSuratSecurity': (context) => const LayananSuratSecurityPage(),
-            
+
         // ---------- RT ----------
         '/rtDashboard': (context) => const DashboardPageRT(),
         '/riwayatRT': (context) => const RiwayatPageRT(),
@@ -73,9 +71,7 @@ class MyApp extends StatelessWidget {
 
       // ---------- 404 HANDLER ----------
       onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (_) => const NotFoundPage(),
-        );
+        return MaterialPageRoute(builder: (_) => const NotFoundPage());
       },
     );
   }

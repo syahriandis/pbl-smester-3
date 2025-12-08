@@ -1,56 +1,68 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout.dart';
 import 'package:login_tes/widgets/ganti_password_dialog.dart';
-import 'package:login_tes/widgets/edit_keluarga_dialog.dart';
+import 'package:login_tes/pages/login_page.dart';
+import 'package:login_tes/utils/user_storage.dart';
 
-class ProfilePage extends StatefulWidget {
+
+class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
-  @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
-  late Future<Map<String, dynamic>> _profileFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _profileFuture = _fetchProfile();
-  }
-
-  Future<Map<String, dynamic>> _fetchProfile() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token");
-
-    final res = await http.get(
-      Uri.parse("http://127.0.0.1:8000/api/profile"),
-      headers: {"Authorization": "Bearer $token"},
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Konfirmasi Logout',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: primaryColor,
+            ),
+          ),
+          content: const Text(
+            'Apakah Anda yakin ingin keluar dari akun?',
+            style: TextStyle(fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Batal',
+                style: TextStyle(color: greyColor),
+              ),
+            ),
+              ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Logout - hapus current user
+                UserStorage.logout();
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Logout',
+                style: TextStyle(color: whiteColor),
+              ),
+            ),
+          ],
+        );
+      },
     );
-
-    if (res.statusCode == 200) {
-      final Map<String, dynamic> json = jsonDecode(res.body);
-      return (json["data"] as Map<String, dynamic>);
-    } else {
-      throw Exception("Gagal memuat profil (${res.statusCode})");
-    }
-  }
-
-  String _getRoleTitle(String? role) {
-    switch (role) {
-      case "rt":
-        return "Profil Ketua RT";
-      case "rw":
-        return "Profil Ketua RW";
-      case "security":
-        return "Profil Security";
-      default:
-        return "Profil Warga";
-    }
   }
 
   @override
@@ -59,44 +71,15 @@ class _ProfilePageState extends State<ProfilePage> {
       selectedIndex: 3,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-        child: FutureBuilder<Map<String, dynamic>>(
-          future: _profileFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(
-                child: Text(
-                  "Terjadi kesalahan: ${snapshot.error}",
-                  style: const TextStyle(color: Colors.red),
-                ),
-              );
-            }
-            if (!snapshot.hasData) {
-              return const Center(child: Text("Data profil tidak tersedia"));
-            }
-
-            final data = snapshot.data!;
-            return _buildBody(context, data);
-          },
-        ),
+        child: _buildBody(context),
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, Map<String, dynamic> data) {
-    final role = data["role"];
-    final name = data["name"];
-    final gender = data["gender"];
-    final phone = data["phone"];
-    final address = data["address"];
-    final families = (data["families"] ?? []) as List<dynamic>;
-
+ Widget _buildBody(BuildContext context) {
     return SafeArea(
       child: Column(
         children: [
-          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -126,10 +109,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Role
-                    Text(
-                      _getRoleTitle(role),
-                      style: const TextStyle(
+                    const Text(
+                      "Profile Warga",
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: primaryColor,
@@ -155,19 +137,28 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                           const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                (name ?? 'Nama tidak tersedia').toString(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Text((gender ?? 'Jenis kelamin tidak tersedia').toString()),
-                              Text((phone ?? 'Nomor tidak tersedia').toString()),
-                            ],
+                          Builder(
+                            builder: (context) {
+                              final profile = UserStorage.getCurrentUserProfile();
+                              final nama = profile?.nama ?? 'User';
+                              final jenisKelamin = profile?.jenisKelamin ?? 'Laki-laki';
+                              final nik = profile?.nik ?? '-';
+                              
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    nama,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Text(jenisKelamin),
+                                  Text(nik),
+                                ],
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -175,41 +166,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     const SizedBox(height: 20),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Profile Keluarga",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            final updated = await showDialog(
-                              context: context,
-                              builder: (context) => const EditKeluargaPage(),
-                            );
-                            if (updated == true) {
-                              setState(() {
-                                _profileFuture = _fetchProfile();
-                              });
-                            }
-                          },
-                          child: const Text(
-                            "Edit",
-                            style: TextStyle(
-                              color: primaryColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
+                   const Text(
+                      "Profile Keluarga",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
                     ),
                     const SizedBox(height: 8),
-
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
@@ -217,29 +182,41 @@ class _ProfilePageState extends State<ProfilePage> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.grey.shade300),
                       ),
-                      child: Column(
+                      child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             "Anggota keluarga",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(height: 4),
-
-                          if (families.isEmpty)
-                            const Text("Belum ada anggota keluarga"),
-                          for (var f in families)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text((f["nama"] ?? 'Nama anggota').toString()),
-                                Text((f["hubungan"] ?? 'Hubungan tidak tersedia').toString()),
-                              ],
-                            ),
-
-                          const SizedBox(height: 12),
-                          const Text("Alamat", style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text((address ?? 'Alamat belum tersedia').toString()),
+                          SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Madisson Beer"),
+                              Text("My Wife"),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Aripin Beer"),
+                              Text("Anak")
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Ryan Gosling Beer"),
+                              Text("Anak"),
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            "Alamat",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text("Komplek Bengkong Wahyu Blok 2 No 100, Batam, Tj. Buntung, Kec. Bengkong, Kota Batam, Kepulauan Riau 29444")
                         ],
                       ),
                     ),
@@ -255,7 +232,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -266,11 +242,12 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const EditPasswordDialog(),
-                          );
-                        },
+                              showDialog(
+                                context: context,
+                                builder: (context) => const GantiPasswordDialog(),
+                              );
+                            },
+
                         child: const Text(
                           "Edit",
                           style: TextStyle(
@@ -279,13 +256,44 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          _showLogoutDialog(context);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.red, width: 2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                        ),
+                        icon: const Icon(
+                          Icons.logout,
+                          color: Colors.red,
+                        ),
+                        label: const Text(
+                          "Logout",
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
                   ],
-                ),
+                )
               ),
             ),
           )
         ],
       ),
+
     );
   }
 }

@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dashboard_page.dart';
-import 'dashboard_security_page.dart';
-import 'dashboard_page_rt.dart';
 import 'package:login_tes/constants/colors.dart';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-// ==============================
+import 'package:login_tes/utils/user_storage.dart';
+import 'dashboard_page.dart';
+import 'register_page.dart';
+import 'admin_dashboard_page.dart';
+import 'admin_register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,7 +14,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _userIDController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
@@ -25,14 +22,13 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _userIDController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // ====================== LOGIN API ======================
   Future<void> _onLoginPressed() async {
-    final username = _userIDController.text.trim();
+    final username = _emailController.text.trim();
     final password = _passwordController.text;
 
     if (username.isEmpty || password.isEmpty) {
@@ -40,56 +36,39 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+    });
 
-    try {
-      final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/login"),
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: jsonEncode({
-          'userID': username,
-          'password': password,
-        }),
-      );
+    await Future.delayed(const Duration(milliseconds: 1500));
 
-        print('Status: ${response.statusCode}');
-        print('Body: ${response.body}');
-          
-      setState(() => _isLoading = false);
+    setState(() {
+      _isLoading = false;
+    });
 
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200 && data['token'] != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', data['token']);
-        await prefs.setString('role', data['role']);
-        
-        // Routing berdasarkan role
-        if (data['role'] == 'security') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const DashboardSecurityPage()),
-          );
-        } else if (data['role'] == 'rt') {
-          Navigator.pushReplacementNamed(context, '/rtDashboard');
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const DashboardPage()),
-          );
-        }
+    if (UserStorage.verifyPassword(username, password)) {
+      // Simpan user yang sedang login
+      UserStorage.setCurrentUser(username);
+      
+      // Redirect berdasarkan role
+      if (UserStorage.isAdmin(username)) {
+        // Import admin dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminDashboardPage()),
+        );
       } else {
-        _showSnackBar(data['message'] ?? 'Login gagal');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardPage()),
+        );
       }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      _showSnackBar('Terjadi kesalahan: $e');
+    } else if (UserStorage.isUserExists(username)) {
+      _showSnackBar('Password salah!');
+    } else {
+      _showSnackBar('UserID tidak ditemukan!');
     }
   }
-  // =======================================================
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +76,9 @@ class _LoginPageState extends State<LoginPage> {
         content: Text(message),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }
@@ -107,143 +88,200 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: whiteColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Selamat datang,',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor,
-                  ),
-                ),
-              ),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'silahkan masukkan userid dan password kamu',
-                  style: TextStyle(fontSize: 13, color: greyColor),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              Image.asset(
-                'assets/images/logo.png',
-                width: 120,
-              ),
-
-              const SizedBox(height: 32),
-
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: primaryColor,
-                  borderRadius: BorderRadius.circular(20),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 40,
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Center(
+                    const Align(
+                      alignment: Alignment.centerLeft,
                       child: Text(
-                        'LOGIN',
+                        'Selamat datang,',
                         style: TextStyle(
-                          color: whiteColor,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          color: primaryColor,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
-
-                    const Text(
-                      'UserID',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'silahkan masukkan userid dan password kamu',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: greyColor,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 32),
 
-                    TextField(
-                      controller: _userIDController,
-                      decoration: _inputDecoration('Masukkan UserID'),
+                    Image.asset(
+                      'assets/images/logo.png',
+                      width: 120,
+                      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                     ),
+                    const SizedBox(height: 32),
 
-                    const SizedBox(height: 16),
-
-                    const Text(
-                      'Password',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
-                    ),
-                    const SizedBox(height: 8),
-
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: _inputDecoration('Masukkan password').copyWith(
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: greyColor,
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: primaryColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Center(
+                            child: Text(
+                              'LOGIN',
+                              style: TextStyle(
+                                color: whiteColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
+                          const SizedBox(height: 24),
+
+                          const Text(
+                            'UserID',
+                            style: TextStyle(color: Colors.white70, fontSize: 13),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.text,
+                            decoration: InputDecoration(
+                              hintText: 'Masukkan UserID',
+                              fillColor: whiteColor,
+                              filled: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          const Text(
+                            'Password',
+                            style: TextStyle(color: Colors.white70, fontSize: 13),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              hintText: 'Masukkan password',
+                              fillColor: whiteColor,
+                              filled: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                  color: greyColor,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    _isLoading
+                        ? const CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                          )
+                        : ElevatedButton(
+                            onPressed: _onLoginPressed,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Masuk',
+                              style: TextStyle(
+                                color: whiteColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+
+                    const SizedBox(height: 20),
+
+                    OutlinedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const RegisterPage()),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: primaryColor, width: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Daftar Akun Baru',
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 20),
+
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const AdminRegisterPage()),
+                        );
+                      },
+                      child: const Text(
+                        'Daftar sebagai Admin',
+                        style: TextStyle(
+                          color: greyColor,
+                          fontSize: 12,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 32),
-
-              _isLoading
-                  ? const CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(primaryColor),
-                    )
-                  : ElevatedButton(
-                      onPressed: _onLoginPressed,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 80, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text(
-                        'Masuk',
-                        style: TextStyle(
-                          color: whiteColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-            ],
-          ),
+            );
+          },
         ),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      fillColor: whiteColor,
-      filled: true,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide.none,
       ),
     );
   }
