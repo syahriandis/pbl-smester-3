@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FamilyController;
+
 use App\Http\Controllers\InformasiController;
 use App\Http\Controllers\JenisSuratController;
 use App\Http\Controllers\SuratPengajuanController;
