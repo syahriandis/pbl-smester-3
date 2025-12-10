@@ -6,9 +6,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-class LoginController extends Controller
+class AuthController extends Controller
 {
-    public function login(Request $request)
+     public function login(Request $request)
     {
         $request->validate([
             'userID' => 'required|string',
