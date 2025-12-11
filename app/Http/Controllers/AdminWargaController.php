@@ -14,18 +14,25 @@ class AdminWargaController extends Controller
     /**
      * INDEX: Menampilkan daftar SEMUA warga
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            // Ambil user yang role-nya hanya 'warga'
-            // latest() -> agar yang baru dibuat muncul paling atas
-            // get() -> ambil semua datanya
-            $warga = User::where('role', 'warga')->latest()->get();
+            $role = ['warga','security','rt', 'rw'];
+
+            $query = User::query();
+
+            if ($request->has('role') && in_array($request->role, $role)) {
+                $query->where('role', $request->role);
+            } else {
+                $query->whereIn('role', $role);
+            }
+
+            $users = $query->latest()->get();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Daftar semua warga berhasil diambil',
-                'data'    => $warga
+                'data'    => $users
             ], 200);
 
         } catch (\Exception $e) {
@@ -46,25 +53,17 @@ class AdminWargaController extends Controller
             // Cari user berdasarkan ID
             $user = User::find($id);
 
-            // Cek apakah user ada?
             if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Data warga tidak ditemukan',
-                ], 404);
+                return response()->json(['success' => false, 'message' => 'User tidak ditemukan'], 404);
             }
 
-            // Opsional: Pastikan yang dilihat benar-benar 'warga', bukan admin lain
-            if ($user->role !== 'warga') {
-                 return response()->json([
-                    'success' => false,
-                    'message' => 'User ini bukan warga',
-                ], 403);
+            if ($user->role === 'admin') {
+                 return response()->json(['success' => false, 'message' => 'Akses ditolak'], 403);
             }
 
-            return response()->json([
+           return response()->json([
                 'success' => true,
-                'message' => 'Detail warga ditemukan',
+                'message' => 'Detail user ditemukan',
                 'data'    => $user
             ], 200);
 
@@ -94,8 +93,10 @@ class AdminWargaController extends Controller
             'password' => 'required|string|min:6', // Minimal 6 karakter
             'name'     => 'required|string|max:100',
             'gender'   => 'nullable|string|in:male,female', // Batasi pilihan
-            // 'phone'    => 'nullable|numeric|digits_between:10,15', // Hanya angka
+            'phone' => ['nullable', 'string', 'max:15', 'regex:/^(62|0)8[1-9][0-9]{6,12}$/'], // Hanya angka
+            'nik' => 'nullable|digits:16',
             'photo'    => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
+            'role' => 'required|string|in:warga,security,rt,rw',
         ]);
 
         // Jika validasi gagal, kembalikan 422 (Unprocessable Entity)
@@ -122,21 +123,21 @@ class AdminWargaController extends Controller
                 'name'     => $request->name,
                 'gender'   => $request->gender,
                 'phone'    => $request->phone,
+                'nik'      => $request->nik,
                 // 'photo'    => $photoPath,
-                'role'     => 'warga', // Hardcode role agar admin tidak salah input
+                'role'     => $request->role, // Hardcode role agar admin tidak salah input
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Akun warga berhasil dibuat',
-                'data'    => $user // Kembalikan data user tanpa password (hidden di model)
+                'message' => "Akun {$request->role} berhasil dibuat",
+                'data'    => $user
             ], 201);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan server',
-                // Jangan tampilkan $e->getMessage() secara detail ke publik (security)
                 'error'   => $e->getMessage() 
             ], 500);
         }
@@ -170,7 +171,9 @@ class AdminWargaController extends Controller
             'name'     => 'required|string|max:100',
             'gender'   => 'nullable|string|in:male,female',
             'password' => 'nullable|string|min:6', // Password jadi nullable (opsional)
+            'nik' => 'nullable|numeric|max:16',
             'photo'    => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'role' => 'required|string|in:warga,security,rt,rw',
         ]);
 
         if ($validator->fails()) {
@@ -188,6 +191,8 @@ class AdminWargaController extends Controller
                 'name'   => $request->name,
                 'gender' => $request->gender,
                 'phone'  => $request->phone,
+                'nik'    => $request->nik,
+                'role' => $request->role,
             ];
 
             // 4. Cek apakah ada request ganti password?
@@ -212,7 +217,7 @@ class AdminWargaController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data warga berhasil diperbarui',
+                'message' => 'Data berhasil diperbarui',
                 'data'    => $user
             ], 200);
 
@@ -250,7 +255,7 @@ class AdminWargaController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data warga berhasil dihapus',
+                'message' => 'Data berhasil dihapus',
             ], 200);
 
         } catch (\Exception $e) {

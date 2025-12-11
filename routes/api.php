@@ -7,6 +7,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FamilyController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminWargaController;
+use App\Http\Controllers\PengaduanController;
+use App\Http\Controllers\JenisPengaduanController;
 /*
 |--------------------------------------------------------------------------
 | 1. Route PUBLIC (Bisa diakses tanpa login)
@@ -26,6 +28,24 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    //Jenis Pengaduan Routes
+    Route::prefix('jenis-pengaduan')->group(function () {
+        Route::get('/', [JenisPengaduanController::class, 'index']); 
+        Route::post('/', [JenisPengaduanController::class, 'create']); 
+        Route::put('/{id}', [JenisPengaduanController::class, 'update']); 
+        Route::delete('/{id}', [JenisPengaduanController::class, 'destroy']); 
+    });
+
+    //Pengaduan Routes
+    Route::prefix('pengaduan')->group(function() {
+        Route::get('/', [PengaduanController::class, 'index']);
+        Route::post('/', [PengaduanController::class, 'create']);
+        Route::get('/{id}', [PengaduanController::class, 'show']);
+        Route::delete('/{id}', [PengaduanController::class, 'destroy']); 
+        Route::put('/{id}/status', [PengaduanController::class, 'updateStatus']);
+    });
+
+
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::post('/profile/update-family', [ProfileController::class, 'updateFamily']);
@@ -35,12 +55,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/family', [FamilyController::class, 'store']);
     Route::delete('/family/{id}', [FamilyController::class, 'destroy']);
 
+    //Admin Routes
     Route::middleware(['role:admin'])->group(function () {
-        Route::get('admin/warga', [AdminWargaController::class, 'index']);
-        Route::get('admin/warga/{id}', [AdminWargaController::class, 'show']);
-        Route::post('/admin/create-warga', [AdminWargaController::class, 'create']);
-        Route::put('admin/update-warga/{id}', [AdminWargaController::class, 'update']); 
-        Route::delete('admin/delete-warga/{id}', [AdminWargaController::class, 'destroy']);
+        Route::get('admin/user', [AdminWargaController::class, 'index']);
+        Route::get('admin/user/{id}', [AdminWargaController::class, 'show']);
+        Route::post('/admin/create-user', [AdminWargaController::class, 'create']);
+        Route::put('admin/update-user/{id}', [AdminWargaController::class, 'update']); 
+        Route::delete('admin/delete-user/{id}', [AdminWargaController::class, 'destroy']);
     });
     
 });
