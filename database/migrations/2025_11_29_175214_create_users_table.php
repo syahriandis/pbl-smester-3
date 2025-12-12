@@ -13,17 +13,11 @@ return new class extends Migration
             $table->string('userID')->unique();
             $table->string('password');
             $table->string('name');
-            $table->string('nik', 16)->unique()->nullable();
-            $table->text('address')->nullable();
-            $table->enum('gender', ['male', 'female'])->nullable();
+            $table->enum('gender', ['LAKI-LAKI', 'PEREMPUAN'])->nullable();
             $table->string('phone')->nullable();
             $table->string('photo')->nullable();
-            $table->enum('role', ['admin', 'warga', 'security', 'rt', 'rw'])->default('warga');
+            $table->string('role')->default('user');    
             $table->timestamps();
         });
-    }
-    public function down(): void
-    {
-        Schema::dropIfExists('users');
     }
 };

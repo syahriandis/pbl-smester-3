@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FamilyController;
-
 use App\Http\Controllers\InformasiController;
 use App\Http\Controllers\JenisSuratController;
 use App\Http\Controllers\SuratPengajuanController;
@@ -17,10 +16,12 @@ use App\Http\Controllers\SuratRTController;
 // =========================
 Route::post('/login', [LoginController::class, 'login']);
 
+
 // =========================
 // JENIS SURAT (PUBLIC GET)
 // =========================
 Route::get('/jenis-surat', [JenisSuratController::class, 'index']);
+
 
 // =========================
 // ROUTE YANG BUTUH TOKEN
@@ -31,16 +32,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/jenis-surat', [JenisSuratController::class, 'store']);
     Route::delete('/jenis-surat/{id}', [JenisSuratController::class, 'destroy']);
 
-    // ======== SURAT WARGA (UNTUK FLUTTER WARGA) ========
-    Route::get('/warga/surat', [SuratPengajuanController::class, 'indexWarga']);  // khusus warga login
-    Route::post('/warga/surat', [SuratPengajuanController::class, 'store']);      // ajukan surat
+    // ======== SURAT WARGA ========
+    Route::post('/surat', [SuratPengajuanController::class, 'store']);   // Ajukan surat
+    Route::get('/surat', [SuratPengajuanController::class, 'index']);    // List surat warga
+    Route::put('/surat/{id}', [SuratPengajuanController::class, 'update']);
 
-    // ======== SURAT RT (LIST SEMUA SURAT UNTUK RT/RW) ========
+    // ======== SURAT RT ========
     Route::get('/rt/surat', [SuratRTController::class, 'index']);
     Route::get('/rt/surat/{id}', [SuratRTController::class, 'show']);
     Route::put('/rt/surat/{id}', [SuratRTController::class, 'update']);
-    Route::post('/rt/surat/{id}/upload', [SuratRTController::class, 'uploadSurat']);
-
 
     // ======== INFORMASI ========
     Route::get('/informasi', [InformasiController::class, 'index']);
