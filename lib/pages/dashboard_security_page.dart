@@ -4,12 +4,24 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout_security.dart';
 
 class DashboardSecurityPage extends StatelessWidget {
-  const DashboardSecurityPage({super.key});
+  final String token;
+  final String role;
+
+  const DashboardSecurityPage({
+    super.key,
+    required this.token,
+    required this.role,
+  });
 
   @override
   Widget build(BuildContext context) {
+    print("TOKEN SECURITY (DASHBOARD): $token");
+    print("ROLE SECURITY (DASHBOARD): $role");
+
     return MainLayoutSecurity(
       selectedIndex: 0,
+      token: token,
+      role: role,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
         child: _buildBody(context),
@@ -21,6 +33,7 @@ class DashboardSecurityPage extends StatelessWidget {
     return SafeArea(
       child: Column(
         children: [
+          // HEADER
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -53,6 +66,7 @@ class DashboardSecurityPage extends StatelessWidget {
             ),
           ),
 
+          // BODY
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -138,6 +152,8 @@ class DashboardSecurityPage extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 10),
+
+                    // ✅ LAYANAN SURAT (TOKEN ASLI)
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -146,10 +162,21 @@ class DashboardSecurityPage extends StatelessWidget {
                       ),
                       title: 'Layanan Surat',
                       subtitle: 'Pengajuan surat dengan mengisi form',
-                      routeName: '/layananSuratSecurity',
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/layananSurat',
+                          arguments: {
+                            'role': role,
+                            'token': token,
+                          },
+                        );
+                      },
                     ),
+
                     const SizedBox(height: 12),
 
+                    // ✅ ADMINISTRASI SECURITY
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -158,16 +185,29 @@ class DashboardSecurityPage extends StatelessWidget {
                       ),
                       title: 'Layanan Administrasi',
                       subtitle: 'Dapat membayar uang iuran dan sebagainya',
-                      routeName: '/LayananAdministrasiSecurity',
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/layananAdministrasiSecurity',
+                        );
+                      },
                     ),
+
                     const SizedBox(height: 12),
 
+                    // ✅ PENGADUAN WARGA
                     _buildServiceCard(
                       context: context,
-                      icon: const Icon(Icons.report, size: 32, color: primaryColor),
+                      icon: const Icon(Icons.report,
+                          size: 32, color: primaryColor),
                       title: 'Layanan Pengaduan Warga',
                       subtitle: 'Melihat semua pengaduan warga',
-                      routeName: '/layananPengaduanWarga',
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/layananPengaduanWarga',
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 30),
@@ -186,12 +226,12 @@ class DashboardSecurityPage extends StatelessWidget {
     required Widget icon,
     required String title,
     required String subtitle,
-    required String routeName,
+    required VoidCallback onTap,
   }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => Navigator.pushNamed(context, routeName),
+        onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(16),

@@ -3,7 +3,14 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layanan_layout_rt.dart';
 
 class LayananAdministrasiPageRT extends StatefulWidget {
-  const LayananAdministrasiPageRT({super.key});
+  final String tokenRT;
+  final String role;
+
+  const LayananAdministrasiPageRT({
+    super.key,
+    required this.tokenRT,
+    required this.role,
+    });
 
   @override
   _LayananAdministrasiPageRTState createState() =>

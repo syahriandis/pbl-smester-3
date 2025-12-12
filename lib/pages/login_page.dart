@@ -3,11 +3,9 @@ import 'dashboard_page.dart';
 import 'dashboard_security_page.dart';
 import 'dashboard_page_rt.dart';
 import 'package:login_tes/constants/colors.dart';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-// ==============================
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -30,7 +28,6 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  // ====================== LOGIN API ======================
   Future<void> _onLoginPressed() async {
     final username = _userIDController.text.trim();
     final password = _passwordController.text;
@@ -55,30 +52,52 @@ class _LoginPageState extends State<LoginPage> {
         }),
       );
 
-        print('Status: ${response.statusCode}');
-        print('Body: ${response.body}');
-          
+      print('Status: ${response.statusCode}');
+      print('Body: ${response.body}');
+
       setState(() => _isLoading = false);
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['token'] != null) {
+        final token = data['token'];
+        final role = data['role'];
+
+        print("TOKEN LOGIN: $token");
+
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', data['token']);
-        await prefs.setString('role', data['role']);
-        
-        // Routing berdasarkan role
-        if (data['role'] == 'security') {
+        await prefs.setString('token', token);
+        await prefs.setString('role', role);
+
+        if (role == 'security') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const DashboardSecurityPage()),
+            MaterialPageRoute(
+              builder: (_) => DashboardSecurityPage(
+                token: token,
+                role: role,
+              ),
+            ),
           );
-        } else if (data['role'] == 'rt') {
-          Navigator.pushReplacementNamed(context, '/rtDashboard');
+        } else if (role == 'rt') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DashboardPageRT(
+                tokenRT: token,
+                role: role,
+              ),
+            ),
+          );
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const DashboardPage()),
+            MaterialPageRoute(
+              builder: (_) => DashboardPage(
+                token: token,
+                role: role,
+              ),
+            ),
           );
         }
       } else {
@@ -89,7 +108,6 @@ class _LoginPageState extends State<LoginPage> {
       _showSnackBar('Terjadi kesalahan: $e');
     }
   }
-  // =======================================================
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -131,14 +149,11 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 32),
-
               Image.asset(
                 'assets/images/logo.png',
                 width: 120,
               ),
-
               const SizedBox(height: 32),
-
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -159,30 +174,26 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
                     const Text(
                       'UserID',
                       style: TextStyle(color: Colors.white70, fontSize: 13),
                     ),
                     const SizedBox(height: 8),
-
                     TextField(
                       controller: _userIDController,
                       decoration: _inputDecoration('Masukkan UserID'),
                     ),
-
                     const SizedBox(height: 16),
-
                     const Text(
                       'Password',
                       style: TextStyle(color: Colors.white70, fontSize: 13),
                     ),
                     const SizedBox(height: 8),
-
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      decoration: _inputDecoration('Masukkan password').copyWith(
+                      decoration: _inputDecoration('Masukkan password')
+                          .copyWith(
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
@@ -201,9 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 32),
-
               _isLoading
                   ? const CircularProgressIndicator(
                       valueColor:

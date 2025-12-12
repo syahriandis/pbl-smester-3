@@ -4,12 +4,23 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout_rt.dart';
 
 class DashboardPageRT extends StatelessWidget {
-  const DashboardPageRT({super.key});
+  final String tokenRT;
+  final String role;
+
+  const DashboardPageRT({
+    super.key,
+    required this.tokenRT,
+    required this.role,
+  });
 
   @override
   Widget build(BuildContext context) {
+    print("TOKEN RT (DASHBOARD RT): $tokenRT");
+
     return MainLayoutRT(
       selectedIndex: 0,
+      tokenRT: tokenRT,
+      role: role,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
         child: _buildBody(context),
@@ -21,7 +32,7 @@ class DashboardPageRT extends StatelessWidget {
     return SafeArea(
       child: Column(
         children: [
-          // Header
+          // HEADER
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -35,9 +46,7 @@ class DashboardPageRT extends StatelessWidget {
                     Image.asset('assets/images/logoputih.png', height: 50),
                     CircleAvatar(
                       radius: 20,
-                      backgroundImage: const AssetImage(
-                        'assets/images/avatar.jpg',
-                      ),
+                      backgroundImage: const AssetImage('assets/images/avatar.jpg'),
                       backgroundColor: Colors.grey[200],
                     ),
                   ],
@@ -55,7 +64,7 @@ class DashboardPageRT extends StatelessWidget {
             ),
           ),
 
-          // Body Content
+          // BODY
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -68,6 +77,7 @@ class DashboardPageRT extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // FORUM
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -141,7 +151,7 @@ class DashboardPageRT extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    // Service Cards
+                    // ✅ LAYANAN SURAT RT (KIRIM TOKEN RT)
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -150,10 +160,20 @@ class DashboardPageRT extends StatelessWidget {
                       ),
                       title: 'Layanan Surat',
                       subtitle: 'Pengajuan surat untuk keperluan warga',
-                      routeName: '/layananSuratRT',
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/layananSuratRT',
+                          arguments: {
+                            'tokenRT': tokenRT,
+                          },
+                        );
+                      },
                     ),
+
                     const SizedBox(height: 12),
 
+                    // ✅ LAYANAN PENGADUAN RT
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -162,9 +182,20 @@ class DashboardPageRT extends StatelessWidget {
                       ),
                       title: 'Layanan Pengaduan',
                       subtitle: 'Pengaduan terkait masalah di lingkungan RT',
-                      routeName: '/layananPengaduanRT',
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/layananPengaduanRT',
+                          arguments: {
+                            'tokenRT': tokenRT,
+                          },
+                        );
+                      },
                     ),
+
                     const SizedBox(height: 12),
+
+                    // ✅ LAYANAN ADMINISTRASI RT
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -173,8 +204,15 @@ class DashboardPageRT extends StatelessWidget {
                       ),
                       title: 'Layanan Administrasi',
                       subtitle: 'Pembayaran iuran dan administrasi RT',
-                      routeName:
-                          '/layananAdministrasiRT', // Sesuaikan dengan rute di main.dart
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/layananAdministrasiRT',
+                          arguments: {
+                            'tokenRT': tokenRT,
+                          },
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 30),
@@ -193,12 +231,12 @@ class DashboardPageRT extends StatelessWidget {
     required Widget icon,
     required String title,
     required String subtitle,
-    required String routeName,
+    required VoidCallback onTap,
   }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => Navigator.pushNamed(context, routeName),
+        onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(16),

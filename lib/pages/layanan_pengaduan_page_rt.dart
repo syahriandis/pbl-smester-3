@@ -3,7 +3,13 @@ import 'package:login_tes/widgets/card_widget_pengaduan.dart'; // Pastikan ini s
 import 'package:login_tes/widgets/main_layanan_layout_rt.dart';
 
 class LayananPengaduanPageRT extends StatefulWidget {
-  LayananPengaduanPageRT({super.key});
+    final String tokenRT;
+  final String role;
+  LayananPengaduanPageRT({
+    super.key,
+    required this.tokenRT,
+    required this.role,  
+  });
 
   @override
   _LayananPengaduanPageRTState createState() => _LayananPengaduanPageRTState();

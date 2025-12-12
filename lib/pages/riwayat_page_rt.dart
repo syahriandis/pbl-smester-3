@@ -3,7 +3,13 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout_rt.dart';
 
 class RiwayatPageRT extends StatefulWidget {
-  const RiwayatPageRT({super.key});
+  final String tokenRT;
+  final String role;
+
+  const RiwayatPageRT({super.key,
+  required this.tokenRT,
+  required this.role,
+  });
 
   @override
   _RiwayatPageRTState createState() => _RiwayatPageRTState();
@@ -50,6 +56,8 @@ class _RiwayatPageRTState extends State<RiwayatPageRT> {
   Widget build(BuildContext context) {
     return MainLayoutRT(
       selectedIndex: 1,
+      tokenRT: widget.tokenRT,
+      role: widget.role,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
         child: _buildBody(),

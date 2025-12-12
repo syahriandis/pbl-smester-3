@@ -55,25 +55,36 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
     }
   }
 
+  // ✅ FINAL: Update alamat + kirim anggota satu per satu
   Future<void> _updateKeluargaDanAlamat() async {
     final token = await _getToken();
 
-    final List<Map<String, dynamic>> families = keluarga.map((f) => {
-      "nama": f["nama"],
-      "hubungan": f["hubungan"],
-    }).toList();
-
-    await http.post(
-      Uri.parse("http://127.0.0.1:8000/api/profile/update-family"),
+    // ✅ Update alamat (kalau endpointnya ada)
+    await http.put(
+      Uri.parse("http://127.0.0.1:8000/api/profile"),
       headers: {
         "Authorization": "Bearer $token",
         "Content-Type": "application/json",
       },
       body: jsonEncode({
         "address": alamatController.text,
-        "families": families,
       }),
     );
+
+    // ✅ Kirim anggota keluarga satu per satu
+    for (var f in keluarga) {
+      await http.post(
+        Uri.parse("http://127.0.0.1:8000/api/family"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "nama": f["nama"],
+          "hubungan": f["hubungan"],
+        }),
+      );
+    }
   }
 
   void _tambahKeluarga() {

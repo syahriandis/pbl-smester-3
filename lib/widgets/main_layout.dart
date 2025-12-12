@@ -9,11 +9,15 @@ import 'package:login_tes/pages/profile_page.dart';
 class MainLayout extends StatefulWidget {
   final int selectedIndex;
   final Widget child;
+  final String token;
+  final String role;
 
   const MainLayout({
     super.key,
     required this.selectedIndex,
     required this.child,
+    required this.token,
+    required this.role,
   });
 
   @override
@@ -25,21 +29,41 @@ class _MainLayoutState extends State<MainLayout> {
     if (index == widget.selectedIndex) return;
 
     Widget page;
+
     switch (index) {
       case 0:
-        page = const DashboardPage();
+        page = DashboardPage(
+          token: widget.token,
+          role: widget.role,
+        );
         break;
+
       case 1:
-        page = const RiwayatPage();
+        page = RiwayatPage(
+          token: widget.token,
+          role: widget.role,
+        );
         break;
+
       case 2:
-        page = InformasiPage();
+        page = InformasiPage(
+          token: widget.token,
+          role: widget.role,
+        );
         break;
+
       case 3:
-        page = const ProfilePage();
+        page = ProfilePage(
+          token: widget.token,
+          role: widget.role,
+        );
         break;
+
       default:
-        page = const DashboardPage();
+        page = DashboardPage(
+          token: widget.token,
+          role: widget.role,
+        );
     }
 
     Navigator.pushReplacement(

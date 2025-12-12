@@ -1,16 +1,23 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:login_tes/widgets/main_layout_rt.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:login_tes/constants/colors.dart';
-import 'package:login_tes/widgets/main_layout.dart';
 import 'package:login_tes/widgets/info_card_widget_rt.dart';
 import 'package:login_tes/widgets/info_detail_dialog_rt.dart';
 import 'package:login_tes/widgets/info_create_dialog.dart';
 
 class InformasiPageRT extends StatefulWidget {
-  const InformasiPageRT({super.key});
+  final String tokenRT;
+  final String role;
+  const InformasiPageRT({
+    super.key,
+    required this.tokenRT,
+    required this.role,  
+  });
+
 
   @override
   State<InformasiPageRT> createState() => _InformasiPageRTState();
@@ -137,8 +144,10 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
 
   @override
   Widget build(BuildContext context) {
-    return MainLayout(
+    return MainLayoutRT(
       selectedIndex: 2,
+      tokenRT: widget.tokenRT,
+      role: widget.role,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
         child: _isLoading

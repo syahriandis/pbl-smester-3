@@ -3,14 +3,25 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout.dart';
 
-
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+  final String token;
+  final String role;
+
+  const DashboardPage({
+    super.key,
+    required this.token,
+    required this.role,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return MainLayout(
+    print("TOKEN DARI LOGIN (DASHBOARD): $token");
+    print("ROLE DARI LOGIN (DASHBOARD): $role");
+
+   return MainLayout(
       selectedIndex: 0,
+      token: token,
+      role: role,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
         child: _buildBody(context),
@@ -66,78 +77,7 @@ class DashboardPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: secondaryColor,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                        border: Border.all(
-                          color: Colors.grey.shade200,
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: SvgPicture.asset(
-                                'assets/icons/whatsapp.svg',
-                                width: 40,
-                                height: 40,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'Forum Komunikasi Warga',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          const Icon(
-                            Icons.chevron_right,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    Row(
-                      children: const [
-                        Icon(Icons.people_alt, color: primaryColor, size: 24),
-                        SizedBox(width: 8),
-                        Text(
-                          'Layanan Warga',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 10),
+                    // ✅ Layanan Surat
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -146,10 +86,21 @@ class DashboardPage extends StatelessWidget {
                       ),
                       title: 'Layanan Surat',
                       subtitle: 'Pengajuan surat dengan mengisi form',
-                      routeName: '/layananSurat',
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/layananSurat',
+                          arguments: {
+                            'role': role,
+                            'token': token,
+                          },
+                        );
+                      },
                     ),
+
                     const SizedBox(height: 12),
 
+                    // ✅ Layanan Pengaduan
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -158,10 +109,14 @@ class DashboardPage extends StatelessWidget {
                       ),
                       title: 'Layanan Pengaduan',
                       subtitle: 'Forum pengaduan dengan mengisi form',
-                      routeName: '/layananPengaduan',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/layananPengaduan');
+                      },
                     ),
+
                     const SizedBox(height: 12),
 
+                    // ✅ Layanan Administrasi
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -170,10 +125,10 @@ class DashboardPage extends StatelessWidget {
                       ),
                       title: 'Layanan Administrasi',
                       subtitle: 'Dapat membayar uang iuran dan sebagainya',
-                      routeName: '/layananAdministrasi',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/layananAdministrasi');
+                      },
                     ),
-
-                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -185,70 +140,70 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildServiceCard({
-  required BuildContext context,
-  required Widget icon,
-  required String title,
-  required String subtitle,
-  required String routeName,
-}) {
-  return Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: () => Navigator.pushNamed(context, routeName),
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: whiteColor,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(10),
+    required BuildContext context,
+    required Widget icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: whiteColor,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
               ),
-              child: Center(child: icon),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(child: icon),
               ),
-            ),
-            const Icon(Icons.chevron_right, color: primaryColor, size: 24),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: primaryColor, size: 24),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

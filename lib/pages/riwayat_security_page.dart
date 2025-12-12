@@ -3,7 +3,13 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout_security.dart';
 
 class RiwayatsecurityPage extends StatefulWidget {
-  const RiwayatsecurityPage({super.key});
+  final String token;
+  final String role;
+  const RiwayatsecurityPage({
+    super.key,
+    required this.token,
+    required this.role,
+    });
 
   @override
   _RiwayatsecurityPageState createState() => _RiwayatsecurityPageState();
@@ -16,6 +22,8 @@ class _RiwayatsecurityPageState extends State<RiwayatsecurityPage> {
   Widget build(BuildContext context) {
     return MainLayoutSecurity(
       selectedIndex: 1,
+      token: widget.token,
+      role: widget.role,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
         child: _buildBody(),

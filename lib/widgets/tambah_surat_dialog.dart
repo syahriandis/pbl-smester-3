@@ -1,149 +1,99 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:http/http.dart' as http;
 
 class TambahSuratDialog extends StatefulWidget {
   final Function(Map<String, dynamic>) onSubmit;
+  final String token;
 
-  const TambahSuratDialog({super.key, required this.onSubmit});
+  const TambahSuratDialog({
+    super.key,
+    required this.onSubmit,
+    required this.token,
+  });
 
   @override
   State<TambahSuratDialog> createState() => _TambahSuratDialogState();
 }
 
 class _TambahSuratDialogState extends State<TambahSuratDialog> {
-  final _formKey = GlobalKey<FormState>();
-  String? _jenisSurat;
-  String? _nama;
-  String? _nik;
-  String? _alamat;
-  String? _keperluan;
-  File? _dokumen;
+  List jenisSuratList = [];
+  int? selectedJenis;
 
-  Future<void> _pickFile() async {
-    final picker = ImagePicker();
-    final source = await showDialog<ImageSource>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Pilih Sumber Gambar"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, ImageSource.camera),
-            child: const Text("Kamera"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, ImageSource.gallery),
-            child: const Text("Galeri"),
-          ),
-        ],
-      ),
-    );
-
-    if (source != null) {
-      final picked = await picker.pickImage(source: source);
-      if (picked != null) setState(() => _dokumen = File(picked.path));
-    }
+  @override
+  void initState() {
+    super.initState();
+    _fetchJenisSurat();
   }
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      widget.onSubmit({
-        'jenisSurat': _jenisSurat,
-        'nama': _nama,
-        'nik': _nik,
-        'alamat': _alamat,
-        'keperluan': _keperluan,
-        'dokumen': _dokumen?.path,
-        'status': 'Proses',
-        'tanggal': DateTime.now().toString().split(' ')[0],
+  Future<void> _fetchJenisSurat() async {
+    final response = await http.get(
+      Uri.parse('http://127.0.0.1:8000/api/jenis-surat'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ${widget.token}',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body)['data'];
+
+      setState(() {
+        jenisSuratList = data;
+
+        // ✅ Auto pilih item pertama biar tidak null
+        if (jenisSuratList.isNotEmpty) {
+          selectedJenis = jenisSuratList.first['id'];
+        }
       });
-      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal mengambil jenis surat")),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Jenis Surat",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 5),
-              DropdownButtonFormField<String>(
-                value: _jenisSurat,
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Surat Izin Keramaian',
-                    child: Text('Surat Izin Keramaian'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Surat Pindah',
-                    child: Text('Surat Pindah'),
-                  ),
-                  DropdownMenuItem(value: 'SKTM', child: Text('SKTM')),
-                ],
-                onChanged: (val) => setState(() => _jenisSurat = val),
-                validator: (val) => val == null ? 'Pilih jenis surat' : null,
-              ),
-              const SizedBox(height: 12),
-              _buildTextField('Nama Lengkap', (val) => _nama = val),
-              _buildTextField('NIK', (val) => _nik = val),
-              _buildTextField('Alamat', (val) => _alamat = val),
-              _buildTextField(
-                'Keperluan',
-                (val) => _keperluan = val,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 10),
-              const Text("Upload Dokumen (KTP/KK):"),
-              const SizedBox(height: 5),
-              OutlinedButton(
-                onPressed: _pickFile,
-                child: Text(
-                  _dokumen == null
-                      ? "Pilih File"
-                      : _dokumen!.path.split('/').last,
-                ),
-              ),
-              const SizedBox(height: 15),
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: _submit,
-                  child: const Text("Kirim Pengajuan"),
-                ),
-              ),
-            ],
-          ),
+    return AlertDialog(
+      title: const Text("Ajukan Surat"),
+      content: jenisSuratList.isEmpty
+          ? const SizedBox(
+              height: 80,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : DropdownButtonFormField<int>(
+              decoration: const InputDecoration(labelText: "Jenis Surat"),
+              value: selectedJenis,
+              items: jenisSuratList.map<DropdownMenuItem<int>>((jenis) {
+                return DropdownMenuItem<int>(
+                  value: jenis['id'],
+                  child: Text(jenis['nama_jenis_surat']),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedJenis = value;
+                });
+              },
+            ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Batal"),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(
-    String label,
-    Function(String?) onSaved, {
-    int maxLines = 1,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: TextFormField(
-        maxLines: maxLines,
-        decoration: InputDecoration(labelText: label),
-        validator: (val) => val == null || val.isEmpty ? 'Harus diisi' : null,
-        onSaved: onSaved,
-      ),
+        ElevatedButton(
+          onPressed: () {
+            if (selectedJenis != null) {
+              widget.onSubmit({
+                'id_jenis_surat': selectedJenis,
+              });
+            }
+          },
+          child: const Text("Ajukan"),
+        ),
+      ],
     );
   }
 }

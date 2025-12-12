@@ -4,15 +4,26 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:login_tes/constants/colors.dart';
+
+// Layouts
 import 'package:login_tes/widgets/main_layout.dart';
 import 'package:login_tes/widgets/main_layout_security.dart';
 import 'package:login_tes/widgets/main_layout_rt.dart';
+
+// Widgets
 import 'package:login_tes/widgets/info_card_widget.dart';
 import 'package:login_tes/widgets/info_detail_dialog.dart';
 import 'package:login_tes/widgets/info_create_dialog.dart';
 
 class InformasiPage extends StatefulWidget {
-  const InformasiPage({super.key});
+  final String token;
+  final String role;
+
+  const InformasiPage({
+    super.key,
+    required this.token,
+    required this.role,
+  });
 
   @override
   State<InformasiPage> createState() => _InformasiPageState();
@@ -21,34 +32,18 @@ class InformasiPage extends StatefulWidget {
 class _InformasiPageState extends State<InformasiPage> {
   List<dynamic> informasiList = [];
   bool isLoading = true;
-  String userRole = "";
 
   @override
   void initState() {
     super.initState();
-    _loadUserRole();
     _loadInformasi();
   }
 
-  Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString("token");
-  }
-
-  Future<void> _loadUserRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userRole = prefs.getString("role") ?? "";
-    });
-  }
-
   Future<void> _loadInformasi() async {
-    final token = await _getToken();
-
     final response = await http.get(
       Uri.parse("http://127.0.0.1:8000/api/informasi"),
       headers: {
-        "Authorization": "Bearer $token",
+        "Authorization": "Bearer ${widget.token}",
       },
     );
 
@@ -68,16 +63,30 @@ class _InformasiPageState extends State<InformasiPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (userRole.isEmpty) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+    Widget layout;
+
+    if (widget.role == "security") {
+      layout = MainLayoutSecurity(
+        selectedIndex: 2,
+        token: widget.token,
+        role: widget.role,
+        child: _buildBody(),
+      );
+    } else if (widget.role == "rt") {
+      layout = MainLayoutRT(
+        selectedIndex: 2,
+        tokenRT: widget.token,
+        role: widget.role,
+        child: _buildBody(),
+      );
+    } else {
+      layout = MainLayout(
+        selectedIndex: 2,
+        token: widget.token,
+        role: widget.role,
+        child: _buildBody(),
       );
     }
-
-    // Layout sesuai role
-    final layout = userRole == "security"
-        ? MainLayoutSecurity(selectedIndex: 2, child: _buildBody())
-        : MainLayout(selectedIndex: 2, child: _buildBody());
 
     return layout;
   }
@@ -120,9 +129,11 @@ class _InformasiPageState extends State<InformasiPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        userRole == "security"
+                        widget.role == "security"
                             ? "Informasi Security"
-                            : "Informasi Warga",
+                            : widget.role == "rt"
+                                ? "Informasi RT"
+                                : "Informasi Warga",
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -130,7 +141,7 @@ class _InformasiPageState extends State<InformasiPage> {
                         ),
                       ),
 
-                      if (userRole == "rt" || userRole == "rw")
+                      if (widget.role == "rt" || widget.role == "rw")
                         GestureDetector(
                           onTap: () async {
                             final refresh = await showCreateInformasiDialog(
