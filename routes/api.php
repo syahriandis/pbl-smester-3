@@ -9,6 +9,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminWargaController;
 use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\JenisPengaduanController;
+use App\Http\Controllers\SuratController;
 /*
 |--------------------------------------------------------------------------
 | 1. Route PUBLIC (Bisa diakses tanpa login)
@@ -45,6 +46,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}/status', [PengaduanController::class, 'updateStatus']);
     });
 
+    //Pengajuan Surat Routes
+    Route::post('/surat',[SuratController::class,'create']);
+    Route::get('/surat',[SuratController::class, 'index']);
+    Route::get('/surat/{id}',[SuratController::class,'show']);
+    Route::put('/surat/{id}/verifikasi', [SuratController::class, 'verifikasi']);
 
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'profile']);
@@ -57,7 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Admin Routes
     Route::middleware(['role:admin'])->group(function () {
-        Route::get('admin/user', [AdminWargaController::class, 'index']);
+        Route::get('admin/users', [AdminWargaController::class, 'index']);
         Route::get('admin/user/{id}', [AdminWargaController::class, 'show']);
         Route::post('/admin/create-user', [AdminWargaController::class, 'create']);
         Route::put('admin/update-user/{id}', [AdminWargaController::class, 'update']); 
