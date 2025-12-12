@@ -5,44 +5,58 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FamilyController;
-
 use App\Http\Controllers\InformasiController;
+use App\Http\Controllers\JenisSuratController;
+use App\Http\Controllers\SuratPengajuanController;
+use App\Http\Controllers\SuratRTController;
 
-// Semua route ini butuh autentikasi (token)
+// =========================
+// LOGIN (TIDAK BUTUH TOKEN)
+// =========================
+Route::post('/login', [LoginController::class, 'login']);
+
+
+// =========================
+// JENIS SURAT (PUBLIC GET)
+// =========================
+Route::get('/jenis-surat', [JenisSuratController::class, 'index']);
+
+
+// =========================
+// ROUTE YANG BUTUH TOKEN
+// =========================
 Route::middleware('auth:sanctum')->group(function () {
+
+    // ======== JENIS SURAT (RT) ========
+    Route::post('/jenis-surat', [JenisSuratController::class, 'store']);
+    Route::delete('/jenis-surat/{id}', [JenisSuratController::class, 'destroy']);
+
+    // ======== SURAT WARGA ========
+    Route::post('/surat', [SuratPengajuanController::class, 'store']);   // Ajukan surat
+    Route::get('/surat', [SuratPengajuanController::class, 'index']);    // List surat warga
+    Route::put('/surat/{id}', [SuratPengajuanController::class, 'update']);
+
+    // ======== SURAT RT ========
+    Route::get('/rt/surat', [SuratRTController::class, 'index']);
+    Route::get('/rt/surat/{id}', [SuratRTController::class, 'show']);
+    Route::put('/rt/surat/{id}', [SuratRTController::class, 'update']);
+
+    // ======== INFORMASI ========
     Route::get('/informasi', [InformasiController::class, 'index']);
     Route::post('/informasi', [InformasiController::class, 'store']);
     Route::put('/informasi/{id}', [InformasiController::class, 'update']);
     Route::delete('/informasi/{id}', [InformasiController::class, 'destroy']);
-});
 
-Route::middleware('auth:sanctum')->group(function () {
-
-    // RT / RW dapat membuat & menghapus
-    Route::post('/informasi', [InformasiController::class, 'store']);
-    Route::delete('/informasi/{id}', [InformasiController::class, 'destroy']);
-
-    // Semua role bisa lihat
-    Route::get('/informasi', [InformasiController::class, 'index']);
-    Route::get('/informasi/{id}', [InformasiController::class, 'show']);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
-
+    // ======== PROFILE ========
     Route::get('/profile', [ProfileController::class, 'profile']);
-    Route::post('/profile/update-family', [ProfileController::class, 'updateFamily']);
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
 
+    // ======== KELUARGA ========
     Route::post('/family', [FamilyController::class, 'store']);
     Route::delete('/family/{id}', [FamilyController::class, 'destroy']);
 
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->middleware('auth:sanctum');
-
+    // ======== USER INFO ========
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 });
-
-
-
-
-Route::post('/login', [LoginController::class, 'login']);

@@ -19,6 +19,7 @@ class User extends Authenticatable
         'photo',
         'role',
         'address',
+        'nik',
     ];
 
     protected $hidden = [
@@ -26,8 +27,8 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    public function families()
+   public function families()
     {
-        return $this->hasMany(Family::class);
+        return $this->hasMany(\App\Models\Family::class, 'user_id');
     }
 }

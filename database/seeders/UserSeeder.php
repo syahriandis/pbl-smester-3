@@ -11,31 +11,12 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'userID' => 'dwiky',
-            'password' => Hash::make('password123'),
-            'name' => 'Dwiky',
-            'role' => 'warga',
-        ]);
-
-        User::create([
-            'userID' => 'warga',
-            'password' => Hash::make('warga123'),
-            'name' => 'Warga Biasa',
-            'role' => 'warga',
-        ]);
-
-        User::create([
-            'userID' => 'security',
-            'password' => Hash::make('security123'),
-            'name' => 'Petugas Security',
-            'role' => 'security',
-        ]);
-
-        User::create([
-            'userID' => 'rtaja',
-            'password' => Hash::make('apalah123'),
-            'name' => 'Ketua RT',
-            'role' => 'rt',
-        ]);
+    'userID' => 'dwiky002',
+    'password' => bcrypt('123456'),
+    'name' => 'Dwikyy',
+    'gender' => 'LAKI-LAKI',
+    'phone' => '08123456788',
+    'role' => 'warga',
+]);
     }
 }

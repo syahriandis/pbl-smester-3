@@ -1,12 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Models\Family;
 use Illuminate\Http\Request;
-
 class FamilyController extends Controller
 {
+    // ✅ Tambah anggota keluarga
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -14,15 +13,22 @@ class FamilyController extends Controller
             'hubungan' => 'required|string|max:255',
         ]);
 
-        $family = $request->user()->families()->create($validated);
+        // ✅ Ambil user dari token
+        $family = $request->user()->families()->create([
+            'nama' => $validated['nama'],
+            'hubungan' => $validated['hubungan'],
+        ]);
 
-        return response()->json(['data' => [
-            'id' => $family->id,
-            'nama' => $family->nama,
-            'hubungan' => $family->hubungan,
-        ]], 201);
+        return response()->json([
+            'data' => [
+                'id' => $family->id,
+                'nama' => $family->nama,
+                'hubungan' => $family->hubungan,
+            ]
+        ], 201);
     }
 
+    // ✅ Hapus anggota keluarga
     public function destroy(Request $request, $id)
     {
         $family = $request->user()->families()->findOrFail($id);

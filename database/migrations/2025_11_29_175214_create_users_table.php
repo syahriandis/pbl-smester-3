@@ -13,10 +13,10 @@ return new class extends Migration
             $table->string('userID')->unique();
             $table->string('password');
             $table->string('name');
-            $table->enum('gender', ['male', 'female'])->nullable();
+            $table->enum('gender', ['LAKI-LAKI', 'PEREMPUAN'])->nullable();
             $table->string('phone')->nullable();
             $table->string('photo')->nullable();
-            $table->string('role')->default('user');
+            $table->string('role')->default('user');    
             $table->timestamps();
         });
     }
