@@ -7,50 +7,70 @@ use Illuminate\Http\Request;
 
 class SuratRTController extends Controller
 {
-    // GET semua surat
+    // ✅ RT lihat semua surat
     public function index()
     {
-        $surat = SuratPengajuan::with(['user', 'jenisSurat'])
+        $data = SuratPengajuan::with(['user', 'jenisSurat'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json([
-            'message' => 'Daftar surat',
-            'data' => $surat
+            'data' => $data
         ]);
     }
 
-    // GET detail surat
+    // ✅ RT lihat detail surat
     public function show($id)
     {
         $surat = SuratPengajuan::with(['user', 'jenisSurat'])
             ->findOrFail($id);
 
         return response()->json([
-            'message' => 'Detail surat',
             'data' => $surat
         ]);
     }
 
-    // PUT update surat oleh RT
+    // ✅ RT setujui / tolak
     public function update(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,diproses,selesai',
-            'catatan_rt' => 'nullable|string',
-            'data_final' => 'nullable|array',
+            'status' => 'required|in:pending,disetujui,ditolak,selesai',
+            'catatan_rt' => 'nullable|string'
         ]);
 
         $surat = SuratPengajuan::findOrFail($id);
 
         $surat->update([
             'status' => $request->status,
-            'catatan_rt' => $request->catatan_rt,
-            'data_final' => $request->data_final,
+            'catatan_rt' => $request->catatan_rt
         ]);
 
         return response()->json([
-            'message' => 'Surat berhasil diperbarui'
+            'message' => 'Status diperbarui'
+        ]);
+    }
+
+    // ✅ RT upload surat jadi
+    public function uploadSurat(Request $request, $id)
+    {
+        $request->validate([
+            'file_surat' => 'required|file|mimes:pdf,jpg,jpeg,png'
+        ]);
+
+        $surat = SuratPengajuan::findOrFail($id);
+
+        $file = $request->file('file_surat');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $file->storeAs('public/surat_jadi', $fileName);
+
+        $surat->update([
+            'file_surat' => $fileName,
+            'status' => 'selesai'
+        ]);
+
+        return response()->json([
+            'message' => 'Surat berhasil diupload',
+            'file_surat' => $fileName
         ]);
     }
 }

@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SuratPengajuan extends Model
 {
-    use HasFactory;
-
     protected $table = 'surat_pengajuan';
     protected $primaryKey = 'id_pengajuan';
 
@@ -18,16 +15,17 @@ class SuratPengajuan extends Model
         'tanggal_pengajuan',
         'status',
         'catatan_rt',
-        'data_final'
+        'file_surat',
+        'keperluan'
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function jenisSurat()
     {
-        return $this->belongsTo(JenisSurat::class, 'id_jenis_surat', 'id');
+        return $this->belongsTo(JenisSurat::class, 'id_jenis_surat');
     }
-}   
+}
