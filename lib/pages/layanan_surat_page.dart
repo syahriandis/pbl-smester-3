@@ -5,6 +5,7 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layanan_layout.dart';
 import 'package:login_tes/widgets/tambah_surat_dialog.dart';
 import 'package:login_tes/widgets/detail_surat_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LayananSuratPage extends StatefulWidget {
   final String role;
@@ -27,19 +28,21 @@ class _LayananSuratPageState extends State<LayananSuratPage> {
   @override
   void initState() {
     super.initState();
-    print("TOKEN DARI LOGIN (LAYANAN SURAT): ${widget.token}");
     _fetchSuratList();
   }
 
+  // ✅ GET daftar surat warga
   Future<void> _fetchSuratList() async {
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:8000/api/surat'),
+      Uri.parse('http://127.0.0.1:8000/api/warga/surat'),
       headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Authorization': 'Bearer ${widget.token}',
       },
     );
+
+    print("GET STATUS: ${response.statusCode}");
+    print("GET BODY: ${response.body}");
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body)['data'];
@@ -51,6 +54,8 @@ class _LayananSuratPageState extends State<LayananSuratPage> {
             'jenisSurat': item['jenis_surat']['nama_jenis_surat'],
             'tanggal': item['tanggal_pengajuan'],
             'status': item['status'],
+            'file_surat': item['file_surat'],
+            'keperluan': item['keperluan'],
             'detail': item,
           };
         }).toList();
@@ -61,9 +66,10 @@ class _LayananSuratPageState extends State<LayananSuratPage> {
     }
   }
 
+  // ✅ POST ajukan surat
   Future<void> _tambahSurat(Map<String, dynamic> dataSurat) async {
     final response = await http.post(
-      Uri.parse('http://127.0.0.1:8000/api/surat'),
+      Uri.parse('http://127.0.0.1:8000/api/warga/surat'),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -71,19 +77,15 @@ class _LayananSuratPageState extends State<LayananSuratPage> {
       },
       body: jsonEncode({
         'id_jenis_surat': dataSurat['id_jenis_surat'],
+        'keperluan': dataSurat['keperluan'],
       }),
     );
 
-    print("=== HASIL SUBMIT SURAT ===");
-    print("STATUS: ${response.statusCode}");
+    print("POST STATUS: ${response.statusCode}");
+    print("POST BODY: ${response.body}");
 
-    try {
-      print("BODY DECODED: ${jsonDecode(response.body)}");
-    } catch (e) {
-      print("BODY RAW: ${response.body}");
-    }
-
-    if (response.statusCode == 200) {
+    // ✅ FIX: Laravel bisa balikin 200 atau 201
+    if (response.statusCode == 200 || response.statusCode == 201) {
       Navigator.pop(context);
       _fetchSuratList();
     } else {
@@ -91,6 +93,12 @@ class _LayananSuratPageState extends State<LayananSuratPage> {
         const SnackBar(content: Text("Gagal mengajukan surat")),
       );
     }
+  }
+
+  // ✅ Download file surat
+  void _downloadSurat(String fileName) {
+    final url = "http://127.0.0.1:8000/storage/surat_jadi/$fileName";
+    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
   void _showTambahSuratDialog() {
@@ -149,22 +157,42 @@ class _LayananSuratPageState extends State<LayananSuratPage> {
                                   style: const TextStyle(color: Colors.grey),
                                 ),
                                 const SizedBox(height: 4),
+                                Text("Keperluan: ${surat['keperluan']}"),
+                                const SizedBox(height: 4),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text("Status: ${surat['status']}"),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: primaryColor,
-                                        minimumSize: const Size(80, 30),
+
+                                    // ✅ TOMBOL DOWNLOAD JIKA SELESAI
+                                    if (surat['status'] == "selesai" &&
+                                        surat['file_surat'] != null)
+                                      ElevatedButton(
+                                        onPressed: () =>
+                                            _downloadSurat(surat['file_surat']),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green,
+                                          minimumSize: const Size(80, 30),
+                                        ),
+                                        child: const Text(
+                                          "Download",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      )
+                                    else
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: primaryColor,
+                                          minimumSize: const Size(80, 30),
+                                        ),
+                                        onPressed: () =>
+                                            _showDetailSurat(surat),
+                                        child: const Text(
+                                          'Lihat Detail',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
                                       ),
-                                      onPressed: () => _showDetailSurat(surat),
-                                      child: const Text(
-                                        'Lihat Detail',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ],
@@ -173,6 +201,8 @@ class _LayananSuratPageState extends State<LayananSuratPage> {
                         );
                       },
                     ),
+
+          // ✅ Floating button hanya untuk warga & security
           if (widget.role == "warga" || widget.role == "security")
             Positioned(
               bottom: 16,

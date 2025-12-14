@@ -19,6 +19,7 @@ class TambahSuratDialog extends StatefulWidget {
 class _TambahSuratDialogState extends State<TambahSuratDialog> {
   List jenisSuratList = [];
   int? selectedJenis;
+  final TextEditingController keperluanController = TextEditingController();
 
   @override
   void initState() {
@@ -41,8 +42,6 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
 
       setState(() {
         jenisSuratList = data;
-
-        // ✅ Auto pilih item pertama biar tidak null
         if (jenisSuratList.isNotEmpty) {
           selectedJenis = jenisSuratList.first['id'];
         }
@@ -57,26 +56,63 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Ajukan Surat"),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      title: const Text(
+        "Ajukan Surat",
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
       content: jenisSuratList.isEmpty
           ? const SizedBox(
               height: 80,
               child: Center(child: CircularProgressIndicator()),
             )
-          : DropdownButtonFormField<int>(
-              decoration: const InputDecoration(labelText: "Jenis Surat"),
-              value: selectedJenis,
-              items: jenisSuratList.map<DropdownMenuItem<int>>((jenis) {
-                return DropdownMenuItem<int>(
-                  value: jenis['id'],
-                  child: Text(jenis['nama_jenis_surat']),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedJenis = value;
-                });
-              },
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButtonFormField<int>(
+                  decoration: const InputDecoration(
+                    labelText: "Jenis Surat",
+                    border: OutlineInputBorder(),
+                  ),
+                  value: selectedJenis,
+                  items: jenisSuratList.map<DropdownMenuItem<int>>((jenis) {
+                    return DropdownMenuItem<int>(
+                      value: jenis['id'],
+                      child: Text(jenis['nama_jenis_surat']),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedJenis = value;
+                    });
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // ✅ Catatan merah
+                const Text(
+                  "* Isi keperluan (opsional)",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                // ✅ Field keperluan
+                TextField(
+                  controller: keperluanController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    hintText: "Contoh: Untuk keperluan administrasi",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
             ),
       actions: [
         TextButton(
@@ -88,6 +124,7 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
             if (selectedJenis != null) {
               widget.onSubmit({
                 'id_jenis_surat': selectedJenis,
+                'keperluan': keperluanController.text, // ✅ dikirim ke backend
               });
             }
           },

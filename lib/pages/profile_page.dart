@@ -74,7 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
         role: widget.role,
         child: _buildBody(),
       );
-    } else if (widget.role == "rt") {
+    } else if (widget.role == "rt" || widget.role == "rw") {
       layout = MainLayoutRT(
         selectedIndex: 3,
         tokenRT: widget.token,

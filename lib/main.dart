@@ -122,7 +122,7 @@ class MyApp extends StatelessWidget {
         '/profile': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return ProfilePage(
-            token: args['token'],
+            token: args['token'] ?? args['tokenRT'],
             role: args['role'],
           );
         },

@@ -4,10 +4,11 @@ import 'package:http/http.dart' as http;
 
 import 'package:login_tes/widgets/main_layanan_layout_rt.dart';
 import 'package:login_tes/widgets/surat_list_widget.dart';
+import 'detail_surat_rt.dart';
 
 class LayananSuratPageRT extends StatefulWidget {
-  final String tokenRT; 
-  final String role;// ✅ token dikirim dari login RT
+  final String tokenRT;
+  final String role; // "rt" atau "rw"
 
   const LayananSuratPageRT({
     super.key,
@@ -29,19 +30,21 @@ class _LayananSuratPageRTState extends State<LayananSuratPageRT> {
     _fetchSurat();
   }
 
-  // ✅ Ambil data dari backend
+  // ✅ GET semua surat untuk RT/RW
   Future<void> _fetchSurat() async {
+    setState(() => _loading = true);
+
     try {
       final response = await http.get(
-        Uri.parse("http://127.0.0.1:8000/api/rt/surat"),
+        Uri.parse("http://127.0.0.1:8000/api/surat"),
         headers: {
           "Authorization": "Bearer ${widget.tokenRT}",
           "Accept": "application/json",
         },
       );
 
-      print("FETCH STATUS: ${response.statusCode}");
-      print("FETCH BODY: ${response.body}");
+      print("LIST RT STATUS: ${response.statusCode}");
+      print("LIST RT BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)["data"];
@@ -50,33 +53,39 @@ class _LayananSuratPageRTState extends State<LayananSuratPageRT> {
           _suratList = List<Map<String, dynamic>>.from(data.map((s) {
             return {
               'id_pengajuan': s['id_pengajuan'],
-              'jenisSurat': s['jenis_surat']['nama_jenis_surat'],
-              'nama': s['user']['name'],
-              'deskripsi': s['catatan_rt'] ?? '-',
-              'lokasi': 'Tidak ada lokasi',
-              'status': s['status'],
-              'detail': s['data_final']?.toString() ?? '-',
-              'foto': null,
+              'jenisSurat': s['jenis_surat']?['nama_jenis_surat'] ?? '-',
+              'nama': s['user']?['name'] ?? '-',
+              'keperluan': s['keperluan'] ?? '-',
+              'catatan_rt': s['catatan_rt'] ?? '-',
+              'status': s['status'] ?? '-',
+              'tanggal': s['tanggal_pengajuan'] ?? s['created_at'],
             };
           }));
-
           _loading = false;
         });
       } else {
-        _loading = false;
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal memuat data surat")),
+        );
       }
     } catch (e) {
-      print("Error fetch surat: $e");
+      print("ERROR LIST RT: $e");
       setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Terjadi kesalahan saat memuat data")),
+      );
     }
   }
 
-  // ✅ Update status ke backend
-  Future<void> _updateStatusBackend(int index, String status) async {
+  // ✅ UPDATE status ke backend
+  Future<void> _updateStatusBackend(int index, String status,
+      {String? catatan}) async {
     final surat = _suratList[index];
 
     final response = await http.put(
-      Uri.parse("http://127.0.0.1:8000/api/rt/surat/${surat['id_pengajuan']}"),
+      Uri.parse(
+          "http://127.0.0.1:8000/api/rt/surat/${surat['id_pengajuan']}"),
       headers: {
         "Authorization": "Bearer ${widget.tokenRT}",
         "Content-Type": "application/json",
@@ -84,17 +93,18 @@ class _LayananSuratPageRTState extends State<LayananSuratPageRT> {
       },
       body: jsonEncode({
         "status": status,
-        "catatan_rt": surat['deskripsi'],
-        "data_final": surat['detail'],
+        "catatan_rt": catatan ?? surat['catatan_rt'],
       }),
     );
 
-    print("UPDATE STATUS: ${response.statusCode}");
-    print("UPDATE BODY: ${response.body}");
+    print("UPDATE STATUS CODE: ${response.statusCode}");
+    print("UPDATE STATUS BODY: ${response.body}");
 
     if (response.statusCode == 200) {
       setState(() {
         _suratList[index]['status'] = status;
+        _suratList[index]['catatan_rt'] =
+            catatan ?? surat['catatan_rt'] ?? '-';
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,10 +113,41 @@ class _LayananSuratPageRTState extends State<LayananSuratPageRT> {
     }
   }
 
+  // ✅ Dialog input catatan
+  Future<String?> _inputCatatanDialog() async {
+    TextEditingController controller = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Catatan RT/RW"),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              hintText: "Tambahkan catatan (opsional)",
+            ),
+            maxLines: 3,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: const Text("Batal"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: const Text("Simpan"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MainLayananLayoutRT(
-      title: 'Layanan Surat RT',
+      title: widget.role == "rw" ? "Layanan Surat RW" : "Layanan Surat RT",
       onBack: () => Navigator.pop(context),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -118,47 +159,64 @@ class _LayananSuratPageRTState extends State<LayananSuratPageRT> {
                     child: SuratListWidget(
                       suratList: _suratList,
 
-                      // ✅ Detail
-                      onDetail: (surat) {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: Text(surat['jenisSurat']),
-                              content: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text('Nama: ${surat['nama']}'),
-                                  Text('Deskripsi: ${surat['detail']}'),
-                                  Text('Lokasi: ${surat['lokasi']}'),
-                                  Text('Status: ${surat['status']}'),
-                                  const SizedBox(height: 10),
-                                  if (surat['foto'] != null)
-                                    Image.asset(surat['foto'], height: 150),
-                                ],
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('Tutup'),
-                                ),
-                              ],
-                            );
-                          },
+                      // ✅ DETAIL
+                      onDetail: (surat) async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DetailSuratRTPage(
+                              idPengajuan: surat['id_pengajuan'],
+                              token: widget.tokenRT,
+                              role: widget.role,
+                            ),
+                          ),
+                        );
+
+                        if (result == true) {
+                          _fetchSurat();
+                        }
+                      },
+
+                      // ✅ SETUJUI
+                      onSetujui: (surat) async {
+                        final index = _suratList.indexWhere(
+                          (item) =>
+                              item['id_pengajuan'] == surat['id_pengajuan'],
+                        );
+                        final catatan = await _inputCatatanDialog();
+                        await _updateStatusBackend(
+                          index,
+                          'disetujui',
+                          catatan: catatan,
                         );
                       },
 
-                      // ✅ Setujui → diproses
-                      onSetujui: (surat) {
-                        final index = _suratList.indexOf(surat);
-                        _updateStatusBackend(index, 'diproses');
+                      // ✅ SELESAI
+                      onSelesai: (surat) async {
+                        final index = _suratList.indexWhere(
+                          (item) =>
+                              item['id_pengajuan'] == surat['id_pengajuan'],
+                        );
+                        final catatan = await _inputCatatanDialog();
+                        await _updateStatusBackend(
+                          index,
+                          'selesai',
+                          catatan: catatan,
+                        );
                       },
 
-                      // ✅ Tolak → pending
-                      onTolak: (surat) {
-                        final index = _suratList.indexOf(surat);
-                        _updateStatusBackend(index, 'pending');
+                      // ✅ TOLAK
+                      onTolak: (surat) async {
+                        final index = _suratList.indexWhere(
+                          (item) =>
+                              item['id_pengajuan'] == surat['id_pengajuan'],
+                        );
+                        final catatan = await _inputCatatanDialog();
+                        await _updateStatusBackend(
+                          index,
+                          'ditolak',
+                          catatan: catatan,
+                        );
                       },
                     ),
                   ),

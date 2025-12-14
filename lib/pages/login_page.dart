@@ -69,6 +69,7 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setString('token', token);
         await prefs.setString('role', role);
 
+        // ✅ SECURITY
         if (role == 'security') {
           Navigator.pushReplacement(
             context,
@@ -79,17 +80,23 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           );
-        } else if (role == 'rt') {
+        }
+
+        // ✅ RT & RW (SAMA)
+        else if (role == 'rt' || role == 'rw') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (_) => DashboardPageRT(
                 tokenRT: token,
-                role: role,
+                role: role, // ✅ bisa "rt" atau "rw"
               ),
             ),
           );
-        } else {
+        }
+
+        // ✅ WARGA
+        else {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -192,8 +199,7 @@ class _LoginPageState extends State<LoginPage> {
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      decoration: _inputDecoration('Masukkan password')
-                          .copyWith(
+                      decoration: _inputDecoration('Masukkan password').copyWith(
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
@@ -215,8 +221,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 32),
               _isLoading
                   ? const CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(primaryColor),
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                     )
                   : ElevatedButton(
                       onPressed: _onLoginPressed,
