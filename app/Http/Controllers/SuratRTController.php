@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\SuratPengajuan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SuratRTController extends Controller
 {
-    // ✅ RT lihat semua surat
     public function index()
     {
         $data = SuratPengajuan::with(['user', 'jenisSurat'])
@@ -19,7 +19,6 @@ class SuratRTController extends Controller
         ]);
     }
 
-    // ✅ RT lihat detail surat
     public function show($id)
     {
         $surat = SuratPengajuan::with(['user', 'jenisSurat'])
@@ -30,7 +29,6 @@ class SuratRTController extends Controller
         ]);
     }
 
-    // ✅ RT setujui / tolak
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -50,27 +48,41 @@ class SuratRTController extends Controller
         ]);
     }
 
-    // ✅ RT upload surat jadi
-    public function uploadSurat(Request $request, $id)
-    {
-        $request->validate([
-            'file_surat' => 'required|file|mimes:pdf,jpg,jpeg,png'
-        ]);
-
-        $surat = SuratPengajuan::findOrFail($id);
-
-        $file = $request->file('file_surat');
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $file->storeAs('public/surat_jadi', $fileName);
-
-        $surat->update([
-            'file_surat' => $fileName,
-            'status' => 'selesai'
-        ]);
-
+   public function uploadSurat(Request $request, $id)
+{
+    if (!$request->hasFile('file_surat')) {
         return response()->json([
-            'message' => 'Surat berhasil diupload',
-            'file_surat' => $fileName
-        ]);
+            'error' => 'File tidak terkirim dari frontend'
+        ], 400);
     }
+
+    $request->validate([
+        'file_surat' => 'required|file|mimes:pdf,jpg,jpeg,png'
+    ]);
+
+    $surat = SuratPengajuan::findOrFail($id);
+
+    Storage::disk('public')->makeDirectory('surat_jadi');
+
+    $file = $request->file('file_surat');
+
+    // ✅ Bersihkan nama file
+    $original = $file->getClientOriginalName();
+    $clean = str_replace(["\r", "\n", "\t"], '', $original);
+    $clean = str_replace(' ', '_', $clean);
+    $fileName = time() . '_' . $clean;
+
+    // ✅ SIMPAN KE DISK PUBLIC (fix double public)
+    Storage::disk('public')->putFileAs('surat_jadi', $file, $fileName);
+
+    // ✅ Update DB
+    $surat->file_surat = $fileName;
+    $surat->status = 'selesai';
+    $surat->save();
+
+    return response()->json([
+        'message' => 'Surat berhasil diupload',
+        'file_surat' => $fileName
+    ]);
+}
 }
