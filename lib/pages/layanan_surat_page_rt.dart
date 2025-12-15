@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:login_tes/widgets/main_layanan_layout_rt.dart';
 import 'package:login_tes/widgets/surat_list_widget.dart';
 import 'detail_surat_rt.dart';
 
 class LayananSuratPageRT extends StatefulWidget {
   final String tokenRT;
-  final String role; // "rt" atau "rw"
+  final String role;
 
   const LayananSuratPageRT({
     super.key,
@@ -36,7 +35,7 @@ class _LayananSuratPageRTState extends State<LayananSuratPageRT> {
 
     try {
       final response = await http.get(
-        Uri.parse("http://127.0.0.1:8000/api/surat"),
+        Uri.parse("http://127.0.0.1:8000/api/rt/surat"),
         headers: {
           "Authorization": "Bearer ${widget.tokenRT}",
           "Accept": "application/json",
@@ -84,8 +83,7 @@ class _LayananSuratPageRTState extends State<LayananSuratPageRT> {
     final surat = _suratList[index];
 
     final response = await http.put(
-      Uri.parse(
-          "http://127.0.0.1:8000/api/rt/surat/${surat['id_pengajuan']}"),
+      Uri.parse("http://127.0.0.1:8000/api/rt/surat/${surat['id_pengajuan']}"),
       headers: {
         "Authorization": "Bearer ${widget.tokenRT}",
         "Content-Type": "application/json",
@@ -144,84 +142,92 @@ class _LayananSuratPageRTState extends State<LayananSuratPageRT> {
     );
   }
 
+  // ✅ Helper untuk filter berdasarkan status
+  Widget _buildSuratListByStatus(String status) {
+    final filtered =
+        _suratList.where((s) => s['status'] == status).toList();
+
+    return SuratListWidget(
+      suratList: filtered,
+
+      // ✅ DETAIL
+      onDetail: (surat) async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DetailSuratRTPage(
+              idPengajuan: surat['id_pengajuan'],
+              token: widget.tokenRT,
+              role: widget.role,
+            ),
+          ),
+        );
+        if (result == true) _fetchSurat();
+      },
+
+      // ✅ SETUJUI
+      onSetujui: (surat) async {
+        final index = _suratList.indexWhere(
+            (item) => item['id_pengajuan'] == surat['id_pengajuan']);
+        final catatan = await _inputCatatanDialog();
+        await _updateStatusBackend(index, 'disetujui', catatan: catatan);
+      },
+
+      // ✅ SELESAI
+      onSelesai: (surat) async {
+        final index = _suratList.indexWhere(
+            (item) => item['id_pengajuan'] == surat['id_pengajuan']);
+        final catatan = await _inputCatatanDialog();
+        await _updateStatusBackend(index, 'selesai', catatan: catatan);
+      },
+
+      // ✅ TOLAK
+      onTolak: (surat) async {
+        final index = _suratList.indexWhere(
+            (item) => item['id_pengajuan'] == surat['id_pengajuan']);
+        final catatan = await _inputCatatanDialog();
+        await _updateStatusBackend(index, 'ditolak', catatan: catatan);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MainLayananLayoutRT(
-      title: widget.role == "rw" ? "Layanan Surat RW" : "Layanan Surat RT",
-      onBack: () => Navigator.pop(context),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  Expanded(
-                    child: SuratListWidget(
-                      suratList: _suratList,
-
-                      // ✅ DETAIL
-                      onDetail: (surat) async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => DetailSuratRTPage(
-                              idPengajuan: surat['id_pengajuan'],
-                              token: widget.tokenRT,
-                              role: widget.role,
-                            ),
-                          ),
-                        );
-
-                        if (result == true) {
-                          _fetchSurat();
-                        }
-                      },
-
-                      // ✅ SETUJUI
-                      onSetujui: (surat) async {
-                        final index = _suratList.indexWhere(
-                          (item) =>
-                              item['id_pengajuan'] == surat['id_pengajuan'],
-                        );
-                        final catatan = await _inputCatatanDialog();
-                        await _updateStatusBackend(
-                          index,
-                          'disetujui',
-                          catatan: catatan,
-                        );
-                      },
-
-                      // ✅ SELESAI
-                      onSelesai: (surat) async {
-                        final index = _suratList.indexWhere(
-                          (item) =>
-                              item['id_pengajuan'] == surat['id_pengajuan'],
-                        );
-                        final catatan = await _inputCatatanDialog();
-                        await _updateStatusBackend(
-                          index,
-                          'selesai',
-                          catatan: catatan,
-                        );
-                      },
-
-                      // ✅ TOLAK
-                      onTolak: (surat) async {
-                        final index = _suratList.indexWhere(
-                          (item) =>
-                              item['id_pengajuan'] == surat['id_pengajuan'],
-                        );
-                        final catatan = await _inputCatatanDialog();
-                        await _updateStatusBackend(
-                          index,
-                          'ditolak',
-                          catatan: catatan,
-                        );
-                      },
+    return DefaultTabController(
+      length: 3,
+      child: MainLayananLayoutRT(
+        title: widget.role == "rw"
+            ? "Layanan Surat RW"
+            : "Layanan Surat RT",
+        onBack: () => Navigator.pop(context),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                  children: [
+                    const TabBar(
+                      labelColor: Colors.black,
+                      indicatorColor: Colors.green,
+                      tabs: [
+                        Tab(text: "Pending"),
+                        Tab(text: "Disetujui"),
+                        Tab(text: "Selesai"),
+                      ],
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _buildSuratListByStatus("pending"),
+                          _buildSuratListByStatus("disetujui"),
+                          _buildSuratListByStatus("selesai"),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }

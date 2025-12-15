@@ -141,7 +141,6 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
     }
   }
 
-  // ✅ INPUT CATATAN
   Future<String?> _inputCatatan() async {
     final c = TextEditingController();
     return showDialog<String>(
@@ -161,15 +160,15 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
     );
   }
 
-  // ✅ PREVIEW FILE SURAT JADI
-  Widget _previewFile(String filePath) {
-    final url = "http://127.0.0.1:8000/storage/$filePath";
+    Widget _previewFile(String fileName) {
+    final encoded = Uri.encodeComponent(fileName);
+    final url = "http://127.0.0.1:8000/storage/surat_jadi/$encoded";
 
-    final isImage = filePath.endsWith(".jpg") ||
-        filePath.endsWith(".jpeg") ||
-        filePath.endsWith(".png");
+    final isImage = fileName.endsWith(".jpg") ||
+        fileName.endsWith(".jpeg") ||
+        fileName.endsWith(".png");
 
-    final isPdf = filePath.endsWith(".pdf");
+    final isPdf = fileName.endsWith(".pdf");
 
     if (isImage) {
       return Column(
@@ -194,24 +193,23 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("File PDF:", style: TextStyle(fontSize: 15)),
+          const Text("Preview PDF:", style: TextStyle(fontSize: 15)),
           const SizedBox(height: 10),
-          ElevatedButton.icon(
-            onPressed: () => launchUrl(Uri.parse(url)),
-            icon: const Icon(Icons.picture_as_pdf),
-            label: const Text("Lihat PDF"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+          ElevatedButton(
+            onPressed: () async {
+              await launchUrl(
+                Uri.parse(url),
+                mode: LaunchMode.externalApplication,
+              );
+            },
+            child: const Text("Buka PDF"),
           ),
         ],
       );
     }
 
-    return const Text("Format file tidak didukung.");
+    return const Text("Format file tidak didukung");
   }
-
   @override
   Widget build(BuildContext context) {
     if (loading) {
@@ -234,7 +232,6 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              // ✅ HEADER
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
@@ -271,13 +268,11 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
 
               const SizedBox(height: 20),
 
-              // ✅ DATA WARGA
               _modernSection("Data Warga", [
                 _modernRow("Nama", s['user']?['name'] ?? "-"),
                 _modernRow("UserID", s['user']?['id']?.toString() ?? "-"),
               ]),
 
-              // ✅ INFO SURAT
               _modernSection("Info Surat", [
                 _modernRow("Keperluan", s['keperluan'] ?? "-"),
                 _modernRow("Status", s['status'] ?? "-"),
@@ -289,7 +284,6 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
                 Text(s['catatan_rt'] ?? "-", style: const TextStyle(fontSize: 15)),
               ]),
 
-              // ✅ PREVIEW FILE SURAT JADI
               _modernSection("Surat Jadi", [
                 if (s['file_surat'] == null)
                   const Text("Belum ada file surat jadi.", style: TextStyle(fontSize: 15))
@@ -299,7 +293,6 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
 
               const SizedBox(height: 20),
 
-              // ✅ BUTTONS
               _modernButtons(s),
 
               const SizedBox(height: 30),
