@@ -35,10 +35,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/warga/surat', [SuratPengajuanController::class, 'store']);      // ajukan surat
 
     // ======== SURAT RT (LIST SEMUA SURAT UNTUK RT/RW) ========
-    Route::get('/surat', [SuratRTController::class, 'index']);         // RT lihat semua
-    Route::get('/rt/surat/{id}', [SuratRTController::class, 'show']);  // detail surat RT
-    Route::put('/rt/surat/{id}', [SuratRTController::class, 'update']); // setujui / tolak
-    Route::post('/rt/surat/{id}/upload', [SuratRTController::class, 'uploadSurat']); // upload file surat
+    Route::get('/rt/surat', [SuratRTController::class, 'index']);
+    Route::get('/rt/surat/{id}', [SuratRTController::class, 'show']);
+    Route::put('/rt/surat/{id}', [SuratRTController::class, 'update']);
+    Route::post('/rt/surat/{id}/upload', [SuratRTController::class, 'uploadSurat']);
+
 
     // ======== INFORMASI ========
     Route::get('/informasi', [InformasiController::class, 'index']);
