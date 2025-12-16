@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Pengaduan;
+use App\Models\Family;
 
 class User extends Authenticatable
 {
@@ -14,6 +16,7 @@ class User extends Authenticatable
         'userID',
         'password',
         'name',
+        'nik',
         'gender',
         'phone',
         'photo',
@@ -30,5 +33,12 @@ class User extends Authenticatable
    public function families()
     {
         return $this->hasMany(\App\Models\Family::class, 'user_id');
+<<<<<<< HEAD
+=======
+    }
+    public function pengaduans()
+    {
+        return $this->hasMany(Pengaduan::class, 'id_user');
+>>>>>>> main
     }
 }
