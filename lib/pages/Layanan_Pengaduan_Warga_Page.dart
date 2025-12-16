@@ -5,7 +5,14 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout_security.dart';
 
 class LayananPengaduanWargaPage extends StatefulWidget {
-  const LayananPengaduanWargaPage({super.key});
+  final String token;
+  final String role;
+
+  const LayananPengaduanWargaPage({
+    super.key,
+    required this.token,
+    required this.role,
+    });
 
   @override
   State<LayananPengaduanWargaPage> createState() =>
@@ -101,7 +108,6 @@ class _LayananPengaduanWargaPageState
     }
   }
 
-  // =========================================================
 
   void _ubahStatusPengaduan(Map<String, dynamic> pengaduan, String statusBaru) {
     setState(() {
@@ -375,6 +381,8 @@ class _LayananPengaduanWargaPageState
 
     return MainLayoutSecurity(
       selectedIndex: 0,
+      token: widget.token,
+      role: widget.role,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
         child: SafeArea(

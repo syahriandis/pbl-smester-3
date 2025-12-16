@@ -3,17 +3,21 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/pages/dashboard_security_page.dart';
 import 'package:login_tes/pages/riwayat_security_page.dart';
-import 'package:login_tes/pages/informasi_security_page.dart';
-import 'package:login_tes/pages/profile_security_page.dart';
+import 'package:login_tes/pages/informasi_page.dart';
+import 'package:login_tes/pages/profile_page.dart';
 
 class MainLayoutSecurity extends StatefulWidget {
   final int selectedIndex;
   final Widget child;
+  final String token;
+  final String role;
 
   const MainLayoutSecurity({
     super.key,
     required this.selectedIndex,
     required this.child,
+    required this.token,
+    required this.role,
   });
 
   @override
@@ -25,21 +29,41 @@ class _MainLayoutSecurityState extends State<MainLayoutSecurity> {
     if (index == widget.selectedIndex) return;
 
     Widget page;
+
     switch (index) {
       case 0:
-        page = const DashboardSecurityPage();
+        page = DashboardSecurityPage(
+          token: widget.token,
+          role: widget.role,
+        );
         break;
+
       case 1:
-        page = const RiwayatsecurityPage ();
+        page = RiwayatsecurityPage(
+          token: widget.token,
+          role: widget.role,
+        );
         break;
+
       case 2:
-        page = const InformasiSecurityPage();
+        page = InformasiPage(
+          token: widget.token,
+          role: widget.role,
+        );
         break;
+
       case 3:
-        page = const ProfileSecurityPage();
+        page = ProfilePage(
+          token: widget.token,
+          role: widget.role,
+        );
         break;
+
       default:
-        page = const DashboardSecurityPage();
+        page = DashboardSecurityPage(
+          token: widget.token,
+          role: widget.role,
+        );
     }
 
     Navigator.pushReplacement(

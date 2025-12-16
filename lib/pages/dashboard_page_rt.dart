@@ -4,12 +4,23 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout_rt.dart';
 
 class DashboardPageRT extends StatelessWidget {
-  const DashboardPageRT({super.key});
+  final String tokenRT;
+  final String role; // ✅ bisa "rt" atau "rw"
+
+  const DashboardPageRT({
+    super.key,
+    required this.tokenRT,
+    required this.role,
+  });
 
   @override
   Widget build(BuildContext context) {
+    print("TOKEN RT/RW (DASHBOARD): $tokenRT");
+
     return MainLayoutRT(
       selectedIndex: 0,
+      tokenRT: tokenRT,
+      role: role, // ✅ diteruskan ke layout
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
         child: _buildBody(context),
@@ -18,10 +29,14 @@ class DashboardPageRT extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context) {
+    // ✅ Judul dinamis berdasarkan role
+    final String greetingTitle =
+        role == "rw" ? "Selamat Datang Ketua RW 01" : "Selamat Datang Ketua RT 01";
+
     return SafeArea(
       child: Column(
         children: [
-          // Header
+          // ✅ HEADER
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -35,17 +50,17 @@ class DashboardPageRT extends StatelessWidget {
                     Image.asset('assets/images/logoputih.png', height: 50),
                     CircleAvatar(
                       radius: 20,
-                      backgroundImage: const AssetImage(
-                        'assets/images/avatar.jpg',
-                      ),
+                      backgroundImage: const AssetImage('assets/images/avatar.jpg'),
                       backgroundColor: Colors.grey[200],
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Selamat Datang Ketua RT 01',
-                  style: TextStyle(
+
+                // ✅ Judul dinamis
+                Text(
+                  greetingTitle,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: whiteColor,
@@ -55,7 +70,7 @@ class DashboardPageRT extends StatelessWidget {
             ),
           ),
 
-          // Body Content
+          // ✅ BODY
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -68,6 +83,7 @@ class DashboardPageRT extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ✅ FORUM
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -129,7 +145,7 @@ class DashboardPageRT extends StatelessWidget {
                         Icon(Icons.people_alt, color: primaryColor, size: 24),
                         SizedBox(width: 8),
                         Text(
-                          'Layanan RT',
+                          'Layanan Ketua',
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
@@ -141,7 +157,7 @@ class DashboardPageRT extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    // Service Cards
+                    // ✅ LAYANAN SURAT
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -150,10 +166,21 @@ class DashboardPageRT extends StatelessWidget {
                       ),
                       title: 'Layanan Surat',
                       subtitle: 'Pengajuan surat untuk keperluan warga',
-                      routeName: '/layananSuratRT',
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/layananSuratRT',
+                          arguments: {
+                            'tokenRT': tokenRT,
+                            'role': role, // ✅ penting
+                          },
+                        );
+                      },
                     ),
+
                     const SizedBox(height: 12),
 
+                    // ✅ LAYANAN PENGADUAN
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -161,10 +188,22 @@ class DashboardPageRT extends StatelessWidget {
                         width: 32,
                       ),
                       title: 'Layanan Pengaduan',
-                      subtitle: 'Pengaduan terkait masalah di lingkungan RT',
-                      routeName: '/layananPengaduanRT',
+                      subtitle: 'Pengaduan terkait masalah lingkungan',
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/layananPengaduanRT',
+                          arguments: {
+                            'tokenRT': tokenRT,
+                            'role': role,
+                          },
+                        );
+                      },
                     ),
+
                     const SizedBox(height: 12),
+
+                    // ✅ LAYANAN ADMINISTRASI
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -172,9 +211,17 @@ class DashboardPageRT extends StatelessWidget {
                         width: 32,
                       ),
                       title: 'Layanan Administrasi',
-                      subtitle: 'Pembayaran iuran dan administrasi RT',
-                      routeName:
-                          '/layananAdministrasiRT', // Sesuaikan dengan rute di main.dart
+                      subtitle: 'Pembayaran iuran dan administrasi',
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/layananAdministrasiRT',
+                          arguments: {
+                            'tokenRT': tokenRT,
+                            'role': role,
+                          },
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 30),
@@ -193,12 +240,12 @@ class DashboardPageRT extends StatelessWidget {
     required Widget icon,
     required String title,
     required String subtitle,
-    required String routeName,
+    required VoidCallback onTap,
   }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => Navigator.pushNamed(context, routeName),
+        onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(16),

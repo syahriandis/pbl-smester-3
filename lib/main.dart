@@ -1,31 +1,26 @@
 import 'package:flutter/material.dart';
 
-//Frondend
+// FRONTEND (WARGA)
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/layanan_surat_page.dart';
-import 'pages/layanan_pengaduan_page.dart'
-    as LayananPengaduanFrontend;
+import 'pages/layanan_pengaduan_page.dart' as LayananPengaduanFrontend;
 import 'pages/layanan_administrasi_page.dart';
 
-//security
+// SECURITY
 import 'pages/dashboard_security_page.dart';
 import 'pages/layanan_pengaduan_warga_page.dart';
 import 'pages/layanan_administrasi_security.dart';
-import 'pages/layanan_surat_security_page.dart';
-import 'pages/profile_security_page.dart';
 
+// RT & RW (SAMA)
+import 'pages/dashboard_page_rt.dart';
+import 'pages/riwayat_page_rt.dart';
+import 'pages/layanan_surat_page_rt.dart';
+import 'pages/layanan_pengaduan_page_rt.dart' as LayananPengaduanRT;
+import 'pages/layanan_administrasi_page_rt.dart';
 
-//rt
-import 'package:login_tes/pages/dashboard_page_rt.dart';
-import 'package:login_tes/pages/riwayat_page_rt.dart';
-import 'package:login_tes/pages/profile_page_rt.dart';
-import 'package:login_tes/pages/layanan_surat_page_rt.dart';
-import 'package:login_tes/pages/layanan_pengaduan_page_rt.dart'
-    as LayananPengaduanMain;
-import 'package:login_tes/pages/layanan_pengaduan_page_rt.dart'
-    as LayananPengaduanRT;
-import 'package:login_tes/pages/layanan_administrasi_page_rt.dart';
+// UNIVERSAL PROFILE PAGE
+import 'pages/profile_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,47 +36,122 @@ class MyApp extends StatelessWidget {
       title: 'Hawaii Garden',
       theme: ThemeData(
         fontFamily: 'Roboto',
-        colorScheme:
-            ColorScheme.fromSeed(seedColor: const Color(0xFF164E47)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF164E47)),
         useMaterial3: true,
       ),
-
-      // ROUTE DEFAULT
       initialRoute: '/login',
 
       routes: {
-        // ---------- FRONTEND ----------
         '/login': (context) => const LoginPage(),
-        '/dashboard': (context) => const DashboardPage(),
-        '/layananSurat': (context) => const LayananSuratPage(),
-        '/layananPengaduan': (context) =>const LayananPengaduanFrontend.LayananPengaduanPage(),  
-        '/layananAdministrasi': (context) => const LayananAdministrasiPage(),
-       
 
-            
-        // ---------- SECURITY ----------
-        '/dashboardSecurity': (context) => const DashboardSecurityPage(),
-        '/layananPengaduanWarga': (context) =>  const LayananPengaduanWargaPage(),
-        '/LayananAdministrasiSecurity': (context) => const LayananAdministrasiSecurityPage(),
-        '/layananSuratSecurity': (context) => const LayananSuratSecurityPage(),
-        '/profileSecurity': (context) => const ProfileSecurityPage(),
-            
-        
-           
+        // ✅ DASHBOARD WARGA
+        '/dashboard': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return DashboardPage(
+            token: args['token'],
+            role: args['role'],
+          );
+        },
 
-        // ---------- RT ----------
-        '/rtDashboard': (context) => const DashboardPageRT(),
-        '/riwayatRT': (context) => const RiwayatPageRT(),
-        '/profileRT': (context) => const ProfilePageRT(),
-        '/layananSuratRT': (context) => const LayananSuratPageRT(),
-        '/layananPengaduanRT': (context) =>
-            LayananPengaduanRT.LayananPengaduanPageRT(),
-        '/layananAdministrasiRT': (context) =>
-            const LayananAdministrasiPageRT(),
+      '/layananPengaduan': (context) {
+        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        return LayananPengaduanFrontend.LayananPengaduanPage(
+          token: args['token'],
+          role: args['role'],
+        );
       },
 
-      // ---------- 404 HANDLER ----------
-      onUnknownRoute: (settings) {
+      '/layananAdministrasi': (context) {
+        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        return LayananAdministrasiPage(
+          token: args['token'],
+          role: args['role'],
+        );
+      },
+
+       '/layananPengaduanWarga': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return LayananPengaduanWargaPage(
+            token: args['token'],
+            role: args['role'],
+          );
+        },
+
+        '/layananAdministrasiSecurity': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return LayananAdministrasiSecurityPage(
+            token: args['token'],
+            role: args['role'],
+          );
+        },
+
+        // ✅ DASHBOARD RT / RW (SAMA)
+        '/rtDashboard': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return DashboardPageRT(
+            tokenRT: args['tokenRT'],
+            role: args['role'], // ✅ bisa "rt" atau "rw"
+          );
+        },
+
+        '/riwayatRT': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return RiwayatPageRT(
+            tokenRT: args['tokenRT'],
+            role: args['role'],
+          );
+        },
+
+        '/layananPengaduanRT': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return LayananPengaduanRT.LayananPengaduanPageRT(
+            tokenRT: args['tokenRT'],
+            role: args['role'],
+          );
+        },
+
+        '/layananAdministrasiRT': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return LayananAdministrasiPageRT(
+            tokenRT: args['tokenRT'],
+            role: args['role'],
+          );
+        },
+
+        // ✅ UNIVERSAL PROFILE PAGE
+        '/profile': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return ProfilePage(
+            token: args['token'] ?? args['tokenRT'],
+            role: args['role'],
+          );
+        },
+      },
+
+      // ✅ ROUTE DINAMIS UNTUK SURAT
+      onGenerateRoute: (settings) {
+        if (settings.name == '/layananSurat') {
+          final args = settings.arguments as Map<String, dynamic>;
+
+          return MaterialPageRoute(
+            builder: (_) => LayananSuratPage(
+              role: args['role'],
+              token: args['token'],
+            ),
+          );
+        }
+
+        if (settings.name == '/layananSuratRT') {
+          final args = settings.arguments as Map<String, dynamic>;
+
+          return MaterialPageRoute(
+            builder: (_) => LayananSuratPageRT(
+              tokenRT: args['tokenRT'],
+              role: args['role'], // ✅ RT atau RW
+            ),
+          );
+        }
+
         return MaterialPageRoute(
           builder: (_) => const NotFoundPage(),
         );
@@ -90,7 +160,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ====== PAGE 404 ======
 class NotFoundPage extends StatelessWidget {
   const NotFoundPage({super.key});
 

@@ -3,10 +3,18 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout_security.dart';
 
 class LayananAdministrasiSecurityPage extends StatefulWidget {
-  const LayananAdministrasiSecurityPage({super.key});
+  final String token;
+  final String role;
+
+  const LayananAdministrasiSecurityPage({
+    super.key,
+    required this.token,
+    required this.role,
+  });
 
   @override
-  State<LayananAdministrasiSecurityPage> createState() => _LayananAdministrasiSecurityPageState();
+  State<LayananAdministrasiSecurityPage> createState() =>
+      _LayananAdministrasiSecurityPageState();
 }
 
 class _LayananAdministrasiSecurityPageState extends State<LayananAdministrasiSecurityPage> {
@@ -115,7 +123,9 @@ class _LayananAdministrasiSecurityPageState extends State<LayananAdministrasiSec
   @override
   Widget build(BuildContext context) {
     return MainLayoutSecurity(
-      selectedIndex: 0, // Sesuaikan dengan posisi menu Security
+      selectedIndex: 0, 
+      token: widget.token,
+      role: widget.role,
       child: Stack(
         children: [
           Column(

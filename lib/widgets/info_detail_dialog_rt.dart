@@ -1,117 +1,156 @@
 import 'package:flutter/material.dart';
 import 'package:login_tes/constants/colors.dart';
+import 'package:login_tes/widgets/info_edit_detail.dart';
 
-class InfoDetailDialogRt extends StatelessWidget {
-  final String imagePath;
-  final String title;
-  final String date;
-  final String day;
-  final String time;
-  final String location;
-
-  const InfoDetailDialogRt({
-    super.key,
-    required this.imagePath,
-    required this.title,
-    required this.date,
-    required this.day,
-    required this.time,
-    required this.location,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+void showInfoDetailDialog(
+  BuildContext context,
+  Map<String, dynamic> info,
+  Function(Map<String, dynamic>) onEdited,
+  Function(int) onDelete,
+) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Text(
+                  "Detail Informasi",
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.asset(imagePath, height: 160, fit: BoxFit.cover),
+                child: (info['image'] != null && info['image'].toString().isNotEmpty)
+                    ? Image.network(
+                        info['image'].toString().startsWith('http')
+                            ? info['image']
+                            : "http://127.0.0.1:8000/${info['image']}",
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      )
+                    : Image.asset(
+                        "assets/images/default.jpg",
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+              ),
+              const SizedBox(height: 20),
+
+              Center(
+                child: Text(
+                  info['title'] ?? 'Tanpa Judul',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
               const SizedBox(height: 16),
-              _buildInfoBox(title, bold: true),
-              _buildInfoBox(date),
-              _buildInfoBox(day),
-              _buildInfoBox(time),
-              _buildInfoBox(location, maxLines: 2),
-              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  const Icon(Icons.location_on, color: primaryColor),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(info['location'] ?? '-', style: const TextStyle(fontSize: 15)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today, color: primaryColor),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "${info['day'] ?? ''}, ${info['date'] ?? ''} ${info['time'] ?? ''}",
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              Text(
+                info['description'] ?? 'Tidak ada deskripsi',
+                style: const TextStyle(fontSize: 15, height: 1.4),
+                textAlign: TextAlign.justify,
+              ),
+              const SizedBox(height: 24),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        showInfoEditDialog(context, info, onEdited);
+                      },
+                      icon: const Icon(Icons.edit, color: Colors.white),
+                      label: const Text("Edit", style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        onDelete(info['id']);
+                      },
+                      icon: const Icon(Icons.delete, color: Colors.white),
+                      label: const Text("Hapus", style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: primaryColor,
+                    side: const BorderSide(color: primaryColor),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
                   onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    "CLOSE",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  icon: const Icon(Icons.close),
+                  label: const Text("Tutup"),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfoBox(String text, {int maxLines = 1, bool bold = false}) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor.withOpacity(0.6), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 3,
-            offset: const Offset(1, 2),
-          ),
-        ],
-      ),
-      child: Text(
-        text,
-        maxLines: maxLines,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
-          color: Colors.black87,
-        ),
-      ),
-    );
-  }
-}
-
-void showInfoDetailDialog(BuildContext context, Map<String, String> info) {
-  showDialog(
-    context: context,
-    builder: (context) => InfoDetailDialogRt(
-      imagePath: info['image']!,
-      title: info['title']!,
-      date: '04/09/2025',
-      day: 'Minggu',
-      time: '14.00 s/d selesai',
-      location: info['location']!,
-    ),
+      );
+    },
   );
 }

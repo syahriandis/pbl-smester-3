@@ -1,236 +1,158 @@
-import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:login_tes/constants/colors.dart';
+import 'package:http/http.dart' as http;
 import 'package:login_tes/widgets/main_layout_rt.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/info_card_widget_rt.dart';
 import 'package:login_tes/widgets/info_detail_dialog_rt.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/services.dart';
+import 'package:login_tes/widgets/info_create_dialog.dart';
 
 class InformasiPageRT extends StatefulWidget {
-  const InformasiPageRT({super.key});
+  final String tokenRT;
+  final String role;
+  const InformasiPageRT({
+    super.key,
+    required this.tokenRT,
+    required this.role,  
+  });
+
 
   @override
-  InformasiPageRTState createState() => InformasiPageRTState();
+  State<InformasiPageRT> createState() => _InformasiPageRTState();
 }
 
-class InformasiPageRTState extends State<InformasiPageRT> {
-  final List<Map<String, String>> informasiList = [];
+class _InformasiPageRTState extends State<InformasiPageRT> {
+  List<Map<String, dynamic>> _listInformasi = [];
+  bool _isLoading = true;
+  String userRole = "rt";
 
-  void _showAddInfoDialog() {
-    final TextEditingController titleController = TextEditingController();
-    final TextEditingController dayController = TextEditingController();
-    final TextEditingController dateController = TextEditingController();
-    final TextEditingController timeController = TextEditingController();
-    final TextEditingController locationController = TextEditingController();
-    String? imagePath;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Tambah Informasi"),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: "Judul"),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: dayController,
-                  decoration: const InputDecoration(labelText: "Hari"),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: dateController,
-                  decoration: const InputDecoration(labelText: "Tanggal"),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: timeController,
-                  decoration: const InputDecoration(labelText: "Waktu"),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: locationController,
-                  decoration: const InputDecoration(labelText: "Lokasi"),
-                ),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () async {
-                    final picker = ImagePicker();
-                    final pickedFile = await picker.pickImage(
-                      source: ImageSource.gallery,
-                    );
-                    if (pickedFile != null) {
-                      setState(() {
-                        imagePath = pickedFile.path;
-                      });
-                    }
-                  },
-                  child: imagePath == null
-                      ? const Icon(Icons.add_a_photo, size: 50)
-                      : Image.file(
-                          File(imagePath!),
-                          height: 100,
-                          width: 100,
-                          fit: BoxFit.cover,
-                        ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Batal"),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  informasiList.add({
-                    'image': imagePath ?? 'assets/images/maulidd.jpg',
-                    'title': titleController.text,
-                    'day': dayController.text,
-                    'date': dateController.text,
-                    'time': timeController.text,
-                    'location': locationController.text,
-                  });
-                });
-                Navigator.pop(context);
-              },
-              child: const Text("Simpan"),
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    _loadInformasi();
   }
 
-  // Menampilkan dialog edit informasi
-  void _showEditInfoDialog(int index) {
-    final Map<String, String> info = informasiList[index];
-    final TextEditingController titleController = TextEditingController(
-      text: info['title'],
-    );
-    final TextEditingController dayController = TextEditingController(
-      text: info['day'],
-    );
-    final TextEditingController dateController = TextEditingController(
-      text: info['date'],
-    );
-    final TextEditingController timeController = TextEditingController(
-      text: info['time'],
-    );
-    final TextEditingController locationController = TextEditingController(
-      text: info['location'],
-    );
-    String? imagePath = info['image'];
+  /// Fetch data dari backend Laravel
+  Future<void> _loadInformasi() async {
+    setState(() => _isLoading = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Edit Informasi"),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: "Judul"),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: dayController,
-                  decoration: const InputDecoration(labelText: "Hari"),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: dateController,
-                  decoration: const InputDecoration(labelText: "Tanggal"),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: timeController,
-                  decoration: const InputDecoration(labelText: "Waktu"),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: locationController,
-                  decoration: const InputDecoration(labelText: "Lokasi"),
-                ),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () async {
-                    final picker = ImagePicker();
-                    final pickedFile = await picker.pickImage(
-                      source: ImageSource.gallery,
-                    );
-                    if (pickedFile != null) {
-                      setState(() {
-                        imagePath = pickedFile.path;
-                      });
-                    }
-                  },
-                  child: imagePath == null
-                      ? const Icon(Icons.add_a_photo, size: 50)
-                      : Image.file(
-                          File(imagePath!),
-                          height: 100,
-                          width: 100,
-                          fit: BoxFit.cover,
-                        ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Batal"),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  informasiList[index] = {
-                    'image': imagePath ?? 'assets/images/maulidd.jpg',
-                    'title': titleController.text,
-                    'day': dayController.text,
-                    'date': dateController.text,
-                    'time': timeController.text,
-                    'location': locationController.text,
-                  };
-                });
-                Navigator.pop(context);
-              },
-              child: const Text("Simpan"),
-            ),
-          ],
+      final response = await http.get(
+        Uri.parse('http://127.0.0.1:8000/api/informasi'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body)['data'] as List;
+        setState(() {
+          _listInformasi = data.map((e) => Map<String, dynamic>.from(e)).toList();
+          _isLoading = false;
+        });
+      } else {
+        throw Exception("Gagal memuat informasi (${response.statusCode})");
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error memuat informasi: $e")),
         );
-      },
-    );
+      }
+    }
   }
 
-  // Menghapus informasi
-  void _deleteInfo(int index) {
-    setState(() {
-      informasiList.removeAt(index);
-    });
+  /// Tambah informasi
+  void _navigateToAddInfo() async {
+    final bool? refresh = await showCreateInformasiDialog(context, _loadInformasi);
+    if (refresh == true) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Informasi baru berhasil dibuat.")),
+        );
+      }
+      _loadInformasi();
+    }
+  }
+
+  /// Hapus informasi
+  Future<void> _deleteInformasi(int id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final response = await http.delete(
+        Uri.parse('http://127.0.0.1:8000/api/informasi/$id'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Informasi berhasil dihapus.")),
+          );
+        }
+        _loadInformasi();
+      } else {
+        throw Exception("Gagal menghapus informasi (${response.statusCode})");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error hapus informasi: $e")),
+        );
+      }
+    }
+  }
+
+  /// Update informasi
+  Future<void> _updateInformasi(int id, Map<String, dynamic> updated) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final response = await http.put(
+        Uri.parse('http://127.0.0.1:8000/api/informasi/$id'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(updated),
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Informasi berhasil diupdate.")),
+          );
+        }
+        _loadInformasi();
+      } else {
+        throw Exception("Gagal update informasi (${response.statusCode})");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error update informasi: $e")),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MainLayoutRT(
       selectedIndex: 2,
+      tokenRT: widget.tokenRT,
+      role: widget.role,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-        child: _buildBody(),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: primaryColor))
+            : _buildBody(),
       ),
     );
   }
@@ -239,6 +161,7 @@ class InformasiPageRTState extends State<InformasiPageRT> {
     return SafeArea(
       child: Column(
         children: [
+          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -250,11 +173,11 @@ class InformasiPageRTState extends State<InformasiPageRT> {
                 const CircleAvatar(
                   radius: 20,
                   backgroundImage: AssetImage('assets/images/avatar.jpg'),
-                  backgroundColor: Colors.white,
                 ),
               ],
             ),
           ),
+          // Body
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -266,42 +189,84 @@ class InformasiPageRTState extends State<InformasiPageRT> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Informasi Warga",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: _showAddInfoDialog,
-                    child: const Icon(Icons.add, color: Colors.white),
-                    style: ElevatedButton.styleFrom(
-                      shape: CircleBorder(),
-                      padding: const EdgeInsets.all(16),
-                      backgroundColor: primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: informasiList.length,
-                      itemBuilder: (context, index) {
-                        final info = informasiList[index];
-                        return GestureDetector(
-                          onTap: () => showInfoDetailDialog(context, info),
-                          child: InfoCardWidgetRT(
-                            imagePath: info['image']!,
-                            title: info['title']!,
-                            subtitle: info['location']!,
-                            onEdit: () => _showEditInfoDialog(index), // Edit
-                            onDelete: () => _deleteInfo(index), // Delete
+                  // Title + Button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Daftar Informasi",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
+                      ),
+                      if (userRole == "rt" || userRole == "rw")
+                        GestureDetector(
+                          onTap: _navigateToAddInfo,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.add, color: Colors.white, size: 18),
+                                SizedBox(width: 4),
+                                Text(
+                                  "Tambah",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // List
+                  Expanded(
+                    child: _listInformasi.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text("Belum ada informasi.", style: TextStyle(color: Colors.grey)),
+                                const SizedBox(height: 8),
+                                ElevatedButton(onPressed: _loadInformasi, child: const Text("Muat Ulang")),
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _loadInformasi,
+                            child: ListView.builder(
+                              itemCount: _listInformasi.length,
+                              itemBuilder: (context, index) {
+                                final info = _listInformasi[index];
+                                final image = info["image"] ?? "";
+
+                                return InfoCardWidgetRT(
+                                  imagePath: image.isNotEmpty ? image : "assets/images/default.jpg",
+                                  title: info["title"] ?? "",
+                                  subtitle: info["location"] ?? "",
+                                  onEdit: () {
+                                    showInfoDetailDialog(
+                                      context,
+                                      info,
+                                      (updated) => _updateInformasi(info["id"], updated),
+                                      (id) => _deleteInformasi(id),
+                                    );
+                                  },
+                                  onDelete: () => _deleteInformasi(info["id"]),
+                                );
+                              },
+                            ),
+                          ),
                   ),
                 ],
               ),

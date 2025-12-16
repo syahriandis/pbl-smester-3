@@ -3,12 +3,21 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout.dart';
 
 class RiwayatPage extends StatelessWidget {
-  const RiwayatPage({super.key});
+  final String token;
+  final String role;
+
+  const RiwayatPage({
+    super.key,
+    required this.token,
+    required this.role,
+    });
 
   @override
   Widget build(BuildContext context) {
     return MainLayout(
       selectedIndex: 1,
+      token: token,
+      role: role,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
         child: _buildBody(),

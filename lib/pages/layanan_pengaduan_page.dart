@@ -5,7 +5,14 @@ import 'package:login_tes/widgets/tambah_pengaduan_dialog.dart';
 import 'package:login_tes/widgets/detail_pengaduan_dialog.dart';
 
 class LayananPengaduanPage extends StatefulWidget {
-  const LayananPengaduanPage({super.key});
+  final String token;
+  final String role;
+
+  const LayananPengaduanPage({
+    super.key,
+    required this.token,
+    required this.role,
+  });
 
   @override
   State<LayananPengaduanPage> createState() => _LayananPengaduanPageState();

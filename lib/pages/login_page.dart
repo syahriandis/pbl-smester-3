@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-
-// ==== IMPORT DARI FRONTEND ====
 import 'dashboard_page.dart';
 import 'dashboard_security_page.dart';
-
-// ==== IMPORT DARI MAIN ====
+import 'dashboard_page_rt.dart';
 import 'package:login_tes/constants/colors.dart';
-import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,33 +15,22 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _userIDController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _isLoading = false;
 
-  // Gabungan user dari frontend & main
-  final Map<String, String> _users = {
-    'dwiky': 'password123',
-    'warga': 'warga123',
-    'security': 'security123', // user security
-    'rtaja': 'apalah123', // user RT
-  };
-
   @override
   void dispose() {
-    _emailController.dispose();
+    _userIDController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _onLoginPressed() async {
-    final username = _emailController.text.trim().toLowerCase();
+    final username = _userIDController.text.trim();
     final password = _passwordController.text;
-
-    debugPrint('Attempting login: $username');
-    debugPrint('Available users: ${_users.keys.toList()}');
 
     if (username.isEmpty || password.isEmpty) {
       _showSnackBar('UserID dan password harus diisi');
@@ -50,34 +38,81 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    try {
+      final response = await http.post(
+        Uri.parse("http://127.0.0.1:8000/api/login"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: jsonEncode({
+          'userID': username,
+          'password': password,
+        }),
+      );
 
-    if (_users.containsKey(username)) {
-      if (_users[username] == password) {
-        debugPrint('Password benar');
+      print('Status: ${response.statusCode}');
+      print('Body: ${response.body}');
 
-        // Routing berdasarkan role
-        if (username == 'security') {
+      setState(() => _isLoading = false);
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['token'] != null) {
+        final token = data['token'];
+        final role = data['role'];
+
+        print("TOKEN LOGIN: $token");
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        await prefs.setString('role', role);
+
+        // ✅ SECURITY
+        if (role == 'security') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const DashboardSecurityPage()),
+            MaterialPageRoute(
+              builder: (_) => DashboardSecurityPage(
+                token: token,
+                role: role,
+              ),
+            ),
           );
-        } else if (username == 'rtaja') {
-          Navigator.pushReplacementNamed(context, '/rtDashboard');
-        } else {
+        }
+
+        // ✅ RT & RW (SAMA)
+        else if (role == 'rt' || role == 'rw') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const DashboardPage()),
+            MaterialPageRoute(
+              builder: (_) => DashboardPageRT(
+                tokenRT: token,
+                role: role, // ✅ bisa "rt" atau "rw"
+              ),
+            ),
+          );
+        }
+
+        // ✅ WARGA
+        else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DashboardPage(
+                token: token,
+                role: role,
+              ),
+            ),
           );
         }
       } else {
-        _showSnackBar('Password salah!');
+        _showSnackBar(data['message'] ?? 'Login gagal');
       }
-    } else {
-      _showSnackBar('UserID tidak ditemukan!');
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnackBar('Terjadi kesalahan: $e');
     }
   }
 
@@ -121,14 +156,11 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 32),
-
               Image.asset(
                 'assets/images/logo.png',
                 width: 120,
               ),
-
               const SizedBox(height: 32),
-
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -149,51 +181,47 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    const Text('UserID',
-                        style: TextStyle(color: Colors.white70, fontSize: 13)),
+                    const Text(
+                      'UserID',
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
                     const SizedBox(height: 8),
-
                     TextField(
-                      controller: _emailController,
+                      controller: _userIDController,
                       decoration: _inputDecoration('Masukkan UserID'),
                     ),
-
                     const SizedBox(height: 16),
-
-                    const Text('Password',
-                        style: TextStyle(color: Colors.white70, fontSize: 13)),
+                    const Text(
+                      'Password',
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
                     const SizedBox(height: 8),
-
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      decoration: _inputDecoration('Masukkan password')
-                          .copyWith(
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  color: greyColor),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
+                      decoration: _inputDecoration('Masukkan password').copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: greyColor,
                           ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 32),
-
               _isLoading
                   ? const CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(primaryColor),
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                     )
                   : ElevatedButton(
                       onPressed: _onLoginPressed,
