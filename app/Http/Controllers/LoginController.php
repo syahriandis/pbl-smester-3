@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,23 +14,16 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Cek user berdasarkan userID
         $user = User::where('userID', $request->userID)->first();
 
         if (!$user) {
-            return response()->json([
-                'message' => 'User ID tidak ditemukan'
-            ], 404);
+            return response()->json(['message' => 'User ID tidak ditemukan'], 404);
         }
 
-        // Cek password
         if (!Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Password salah'
-            ], 401);
+            return response()->json(['message' => 'Password salah'], 401);
         }
 
-        // Generate token Sanctum
         $token = $user->createToken('authToken')->plainTextToken;
 
         return response()->json([
@@ -42,15 +34,6 @@ class LoginController extends Controller
                 'userID' => $user->userID,
                 'name'   => $user->name,
             ],
-        ], 200);
-    }
-    
-    public function logout(Request $request) {
-        $request->user()->currentAccessToken()->delete();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Logout berhasil'
         ], 200);
     }
 }
