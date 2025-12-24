@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class TambahSuratDialog extends StatefulWidget {
-  final Function(Map<String, dynamic>) onSubmit;
   final String token;
 
   const TambahSuratDialog({
     super.key,
-    required this.onSubmit,
     required this.token,
   });
 
@@ -20,6 +18,7 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
   List jenisSuratList = [];
   int? selectedJenis;
   final TextEditingController keperluanController = TextEditingController();
+  bool isSubmitting = false;
 
   @override
   void initState() {
@@ -39,7 +38,6 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body)['data'];
-
       setState(() {
         jenisSuratList = data;
         if (jenisSuratList.isNotEmpty) {
@@ -53,14 +51,56 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
     }
   }
 
+  Future<void> _ajukanSurat() async {
+    if (selectedJenis == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Jenis surat belum dipilih"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => isSubmitting = true);
+
+    final res = await http.post(
+      Uri.parse("http://127.0.0.1:8000/api/warga/surat"),
+      headers: {
+        "Authorization": "Bearer ${widget.token}",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "id_jenis_surat": selectedJenis,
+        "keperluan": keperluanController.text,
+      }),
+    );
+
+    setState(() => isSubmitting = false);
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Surat berhasil diajukan"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Gagal mengajukan surat: ${res.body}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: const Text(
-        "Ajukan Surat",
-        style: TextStyle(fontWeight: FontWeight.bold),
-      ),
+      title: const Text("Ajukan Surat", style: TextStyle(fontWeight: FontWeight.bold)),
       content: jenisSuratList.isEmpty
           ? const SizedBox(
               height: 80,
@@ -82,28 +122,11 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
                       child: Text(jenis['nama_jenis_surat']),
                     );
                   }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedJenis = value;
-                    });
-                  },
+                  onChanged: (value) => setState(() => selectedJenis = value),
                 ),
-
                 const SizedBox(height: 16),
-
-                // ✅ Catatan merah
-                const Text(
-                  "* Isi keperluan (opsional)",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-
+                const Text("* Isi keperluan (opsional)", style: TextStyle(color: Colors.red, fontSize: 12)),
                 const SizedBox(height: 6),
-
-                // ✅ Field keperluan
                 TextField(
                   controller: keperluanController,
                   maxLines: 2,
@@ -115,20 +138,16 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
               ],
             ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Batal"),
-        ),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
         ElevatedButton(
-          onPressed: () {
-            if (selectedJenis != null) {
-              widget.onSubmit({
-                'id_jenis_surat': selectedJenis,
-                'keperluan': keperluanController.text, // ✅ dikirim ke backend
-              });
-            }
-          },
-          child: const Text("Ajukan"),
+          onPressed: isSubmitting ? null : _ajukanSurat,
+          child: isSubmitting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text("Ajukan"),
         ),
       ],
     );

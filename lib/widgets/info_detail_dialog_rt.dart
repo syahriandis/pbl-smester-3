@@ -1,154 +1,155 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:login_tes/constants/colors.dart';
-import 'package:login_tes/widgets/info_edit_detail.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
-void showInfoDetailDialog(
-  BuildContext context,
-  Map<String, dynamic> info,
-  Function(Map<String, dynamic>) onEdited,
-  Function(int) onDelete,
-) {
-  showDialog(
+Future<bool?> showInfoDetailDialogRT({
+  required BuildContext context,
+  required String token,
+  required Map<String, dynamic> info,
+  required Future<void> Function(int id) onDelete,
+}) async {
+  final titleController = TextEditingController(text: info["title"] ?? "");
+  final locationController = TextEditingController(text: info["location"] ?? "");
+  final descController = TextEditingController(text: info["description"] ?? "");
+  File? selectedImage;
+  bool isSubmitting = false;
+
+  final image = info["image"] ?? "";
+  final imageUrl = image.isNotEmpty ? "http://127.0.0.1:8000/storage/$image" : null;
+
+  return showDialog<bool>(
     context: context,
+    barrierDismissible: false,
     builder: (context) {
-      return Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Text(
-                  "Detail Informasi",
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor,
+      return StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: const Text("Detail Informasi"),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                if (imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(imageUrl, height: 160, width: double.infinity, fit: BoxFit.cover),
                   ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: "Judul", border: OutlineInputBorder()),
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: (info['image'] != null && info['image'].toString().isNotEmpty)
-                    ? Image.network(
-                        info['image'].toString().startsWith('http')
-                            ? info['image']
-                            : "http://127.0.0.1:8000/${info['image']}",
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      )
-                    : Image.asset(
-                        "assets/images/default.jpg",
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-              ),
-              const SizedBox(height: 20),
-
-              Center(
-                child: Text(
-                  info['title'] ?? 'Tanpa Judul',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 10),
+                TextField(
+                  controller: locationController,
+                  decoration: const InputDecoration(labelText: "Lokasi", border: OutlineInputBorder()),
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  const Icon(Icons.location_on, color: primaryColor),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(info['location'] ?? '-', style: const TextStyle(fontSize: 15)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              Row(
-                children: [
-                  const Icon(Icons.calendar_today, color: primaryColor),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      "${info['day'] ?? ''}, ${info['date'] ?? ''} ${info['time'] ?? ''}",
-                      style: const TextStyle(fontSize: 15),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              Text(
-                info['description'] ?? 'Tidak ada deskripsi',
-                style: const TextStyle(fontSize: 15, height: 1.4),
-                textAlign: TextAlign.justify,
-              ),
-              const SizedBox(height: 24),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        showInfoEditDialog(context, info, onEdited);
+                const SizedBox(height: 10),
+                TextField(
+                  controller: descController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(labelText: "Deskripsi", border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+                        if (picked != null) {
+                          setState(() => selectedImage = File(picked.path));
+                        }
                       },
-                      icon: const Icon(Icons.edit, color: Colors.white),
-                      label: const Text("Edit", style: TextStyle(color: Colors.white)),
+                      icon: const Icon(Icons.image),
+                      label: const Text("Ganti Gambar"),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        selectedImage != null ? selectedImage!.path.split('/').last : "Tidak ada gambar baru",
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        onDelete(info['id']);
-                      },
-                      icon: const Icon(Icons.delete, color: Colors.white),
-                      label: const Text("Hapus", style: TextStyle(color: Colors.white)),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: primaryColor,
-                    side: const BorderSide(color: primaryColor),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                  label: const Text("Tutup"),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Tutup")),
+            TextButton(
+              onPressed: () async {
+                final ok = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text("Konfirmasi"),
+                    content: const Text("Yakin ingin menghapus informasi ini?"),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text("Hapus"),
+                      ),
+                    ],
+                  ),
+                );
+                if (ok == true) {
+                  await onDelete(info["id"]);
+                  if (context.mounted) Navigator.pop(context, true);
+                }
+              },
+              child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+            ),
+            ElevatedButton(
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      if (titleController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Judul wajib diisi")),
+                        );
+                        return;
+                      }
+                      setState(() => isSubmitting = true);
+                      try {
+                        final uri = Uri.parse("http://127.0.0.1:8000/api/informasi/${info["id"]}");
+                        final request = http.MultipartRequest("POST", uri)
+                          ..headers['Authorization'] = "Bearer $token"
+                          ..fields['title'] = titleController.text.trim()
+                          ..fields['location'] = locationController.text.trim()
+                          ..fields['description'] = descController.text.trim()
+                          ..fields['_method'] = 'PUT'; // Laravel method spoofing
+
+                        if (selectedImage != null) {
+                          request.files.add(await http.MultipartFile.fromPath('image', selectedImage!.path));
+                        }
+
+                        final response = await request.send();
+                        if (response.statusCode == 200) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Informasi berhasil diupdate")),
+                          );
+                          Navigator.pop(context, true);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Gagal update informasi (${response.statusCode})")),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Error: $e")),
+                        );
+                      } finally {
+                        setState(() => isSubmitting = false);
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(
+                      width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text("Simpan Perubahan"),
+            ),
+          ],
         ),
       );
     },

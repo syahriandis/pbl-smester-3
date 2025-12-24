@@ -30,16 +30,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/jenis-surat', [JenisSuratController::class, 'store']);
     Route::delete('/jenis-surat/{id}', [JenisSuratController::class, 'destroy']);
 
-    // ======== SURAT WARGA (UNTUK FLUTTER WARGA) ========
-    Route::get('/warga/surat', [SuratPengajuanController::class, 'indexWarga']);  // khusus warga login
-    Route::post('/warga/surat', [SuratPengajuanController::class, 'store']);      // ajukan surat
+    // ======== SURAT WARGA ========
+    Route::get('/warga/surat', [SuratPengajuanController::class, 'indexWarga']);
+    Route::post('/warga/surat', [SuratPengajuanController::class, 'store']);
 
-    // ======== SURAT RT (LIST SEMUA SURAT UNTUK RT/RW) ========
+    // ======== SURAT RT ========
     Route::get('/rt/surat', [SuratRTController::class, 'index']);
     Route::get('/rt/surat/{id}', [SuratRTController::class, 'show']);
     Route::put('/rt/surat/{id}', [SuratRTController::class, 'update']);
     Route::post('/rt/surat/{id}/upload', [SuratRTController::class, 'uploadSurat']);
-
 
     // ======== INFORMASI ========
     Route::get('/informasi', [InformasiController::class, 'index']);
@@ -50,8 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // ======== PROFILE ========
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
+    // ✅ kalau mau update address/phone, bisa tambahin:
+    Route::put('/profile', [ProfileController::class, 'update']);
 
-    // ======== KELUARGA ========
+    // ======== FAMILY ========
     Route::post('/family', [FamilyController::class, 'store']);
     Route::delete('/family/{id}', [FamilyController::class, 'destroy']);
 

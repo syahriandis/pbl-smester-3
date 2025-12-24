@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:login_tes/constants/colors.dart';
 
@@ -11,7 +10,6 @@ import 'package:login_tes/widgets/main_layout_security.dart';
 import 'package:login_tes/widgets/main_layout_rt.dart';
 
 // Widgets
-import 'package:login_tes/widgets/info_card_widget.dart';
 import 'package:login_tes/widgets/info_detail_dialog.dart';
 import 'package:login_tes/widgets/info_create_dialog.dart';
 
@@ -40,6 +38,7 @@ class _InformasiPageState extends State<InformasiPage> {
   }
 
   Future<void> _loadInformasi() async {
+    setState(() => isLoading = true);
     final response = await http.get(
       Uri.parse("http://127.0.0.1:8000/api/informasi"),
       headers: {
@@ -53,12 +52,12 @@ class _InformasiPageState extends State<InformasiPage> {
         informasiList = body["data"];
       });
     } else {
-      informasiList = [];
+      setState(() {
+        informasiList = [];
+      });
     }
 
-    setState(() {
-      isLoading = false;
-    });
+    setState(() => isLoading = false);
   }
 
   @override
@@ -92,6 +91,8 @@ class _InformasiPageState extends State<InformasiPage> {
   }
 
   Widget _buildBody() {
+    final canManage = widget.role == "rt" || widget.role == "rw";
+
     return SafeArea(
       child: Column(
         children: [
@@ -104,9 +105,16 @@ class _InformasiPageState extends State<InformasiPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Image.asset('assets/images/logoputih.png', height: 50),
-                const CircleAvatar(
-                  radius: 20,
-                  backgroundImage: AssetImage('assets/images/avatar.jpg'),
+                Text(
+                  widget.role == "security"
+                      ? "Informasi Security"
+                      : widget.role == "rt"
+                          ? "Informasi RT"
+                          : "Informasi Warga",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -128,53 +136,34 @@ class _InformasiPageState extends State<InformasiPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        widget.role == "security"
-                            ? "Informasi Security"
-                            : widget.role == "rt"
-                                ? "Informasi RT"
-                                : "Informasi Warga",
-                        style: const TextStyle(
+                      const Text(
+                        "Daftar Informasi",
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: primaryColor,
                         ),
                       ),
-
-                      if (widget.role == "rt" || widget.role == "rw")
-                        GestureDetector(
-                          onTap: () async {
+                      if (canManage)
+                        ElevatedButton.icon(
+                          onPressed: () async {
                             final refresh = await showCreateInformasiDialog(
-                              context,
-                              _loadInformasi,
+                              context: context,
+                              token: widget.token,
                             );
                             if (refresh == true) _loadInformasi();
                           },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: primaryColor,
+                          icon: const Icon(Icons.add, color: Colors.white),
+                          label: const Text("Tambah"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.add, color: Colors.white, size: 18),
-                                SizedBox(width: 4),
-                                Text(
-                                  "Tambah",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              ],
                             ),
                           ),
                         ),
                     ],
                   ),
-
                   const SizedBox(height: 10),
 
                   // LIST INFORMASI
@@ -188,31 +177,90 @@ class _InformasiPageState extends State<InformasiPage> {
                                   style: TextStyle(color: Colors.grey),
                                 ),
                               )
-                            : ListView.builder(
-                                itemCount: informasiList.length,
-                                itemBuilder: (context, index) {
-                                  final info = informasiList[index];
-                                  final image = info["image"] ?? "";
+                            : RefreshIndicator(
+                                onRefresh: _loadInformasi,
+                                child: ListView.builder(
+                                  itemCount: informasiList.length,
+                                  itemBuilder: (context, index) {
+                                    final info = informasiList[index];
+                                    final image = info["image"] ?? "";
+                                    final imageUrl = image.isNotEmpty
+                                        ? "http://127.0.0.1:8000/storage/$image"
+                                        : null;
 
-                                  return GestureDetector(
-                                    onTap: () => showInfoDetailDialog(context, {
-                                      "image": image,
-                                      "title": info["title"],
-                                      "subtitle": info["location"],
-                                      "date": info["date"],
-                                      "day": info["day"],
-                                      "time": info["time"],
-                                      "description": info["description"],
-                                    }),
-                                    child: InfoCardWidget(
-                                      imagePath: image.isNotEmpty
-                                          ? image
-                                          : "assets/images/default.jpg",
-                                      title: info["title"],
-                                      subtitle: info["location"],
-                                    ),
-                                  );
-                                },
+                                    return Card(
+                                      margin: const EdgeInsets.only(bottom: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 3,
+                                      child: InkWell(
+                                        onTap: () => showInfoDetailDialog(
+                                          context,
+                                          info,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            if (imageUrl != null)
+                                              ClipRRect(
+                                                borderRadius:
+                                                    const BorderRadius.vertical(
+                                                        top: Radius.circular(12)),
+                                                child: Image.network(
+                                                  imageUrl,
+                                                  height: 180,
+                                                  width: double.infinity,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) =>
+                                                      Container(
+                                                    height: 180,
+                                                    color: Colors.grey.shade200,
+                                                    alignment: Alignment.center,
+                                                    child: const Text(
+                                                        "Gambar tidak tersedia"),
+                                                  ),
+                                                ),
+                                              ),
+                                            Padding(
+                                              padding: const EdgeInsets.all(12),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    info["title"] ?? "",
+                                                    style: const TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Row(
+                                                    children: [
+                                                      const Icon(Icons.place,
+                                                          size: 16,
+                                                          color: Colors.grey),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        info["location"] ?? "-",
+                                                        style: const TextStyle(
+                                                            color: Colors.grey),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(info["description"] ?? ""),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                   ),
                 ],

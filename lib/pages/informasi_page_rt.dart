@@ -1,23 +1,23 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:login_tes/widgets/main_layout_rt.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:login_tes/constants/colors.dart';
-import 'package:login_tes/widgets/info_card_widget_rt.dart';
-import 'package:login_tes/widgets/info_detail_dialog_rt.dart';
+import 'package:login_tes/widgets/main_layout_rt.dart';
+
+// Ganti dengan path aktual di project kamu
 import 'package:login_tes/widgets/info_create_dialog.dart';
+import 'package:login_tes/widgets/info_detail_dialog_rt.dart';
 
 class InformasiPageRT extends StatefulWidget {
   final String tokenRT;
   final String role;
+
   const InformasiPageRT({
     super.key,
     required this.tokenRT,
-    required this.role,  
+    required this.role,
   });
-
 
   @override
   State<InformasiPageRT> createState() => _InformasiPageRTState();
@@ -26,7 +26,6 @@ class InformasiPageRT extends StatefulWidget {
 class _InformasiPageRTState extends State<InformasiPageRT> {
   List<Map<String, dynamic>> _listInformasi = [];
   bool _isLoading = true;
-  String userRole = "rt";
 
   @override
   void initState() {
@@ -34,16 +33,12 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
     _loadInformasi();
   }
 
-  /// Fetch data dari backend Laravel
   Future<void> _loadInformasi() async {
     setState(() => _isLoading = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-
       final response = await http.get(
         Uri.parse('http://127.0.0.1:8000/api/informasi'),
-        headers: {'Authorization': 'Bearer $token'},
+        headers: {'Authorization': 'Bearer ${widget.tokenRT}'},
       );
 
       if (response.statusCode == 200) {
@@ -65,28 +60,11 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
     }
   }
 
-  /// Tambah informasi
-  void _navigateToAddInfo() async {
-    final bool? refresh = await showCreateInformasiDialog(context, _loadInformasi);
-    if (refresh == true) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Informasi baru berhasil dibuat.")),
-        );
-      }
-      _loadInformasi();
-    }
-  }
-
-  /// Hapus informasi
   Future<void> _deleteInformasi(int id) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-
       final response = await http.delete(
         Uri.parse('http://127.0.0.1:8000/api/informasi/$id'),
-        headers: {'Authorization': 'Bearer $token'},
+        headers: {'Authorization': 'Bearer ${widget.tokenRT}'},
       );
 
       if (response.statusCode == 200) {
@@ -108,37 +86,32 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
     }
   }
 
-  /// Update informasi
-  Future<void> _updateInformasi(int id, Map<String, dynamic> updated) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-
-      final response = await http.put(
-        Uri.parse('http://127.0.0.1:8000/api/informasi/$id'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(updated),
-      );
-
-      if (response.statusCode == 200) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Informasi berhasil diupdate.")),
-          );
-        }
-        _loadInformasi();
-      } else {
-        throw Exception("Gagal update informasi (${response.statusCode})");
-      }
-    } catch (e) {
+  void _navigateToAddInfo() async {
+    final bool? refresh = await showCreateInformasiDialog(
+      context: context,
+      token: widget.tokenRT,
+    );
+    if (refresh == true) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error update informasi: $e")),
+          const SnackBar(content: Text("Informasi baru berhasil dibuat.")),
         );
       }
+      _loadInformasi();
+    }
+  }
+
+  void _openEditDialog(Map<String, dynamic> info) async {
+    final bool? refresh = await showInfoDetailDialogRT(
+      context: context,
+      token: widget.tokenRT,
+      info: info,
+      onDelete: (id) async {
+        await _deleteInformasi(id);
+      },
+    );
+    if (refresh == true) {
+      _loadInformasi();
     }
   }
 
@@ -158,6 +131,8 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
   }
 
   Widget _buildBody() {
+    final canManage = widget.role == "rt" || widget.role == "rw";
+
     return SafeArea(
       child: Column(
         children: [
@@ -169,10 +144,10 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Image.asset('assets/images/logoputih.png', height: 50),
-                const CircleAvatar(
-                  radius: 20,
-                  backgroundImage: AssetImage('assets/images/avatar.jpg'),
+                Image.asset('assets/images/logoputih.png', height: 44),
+                const Text(
+                  "Informasi RT/RW",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -201,28 +176,17 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
                           color: primaryColor,
                         ),
                       ),
-                      if (userRole == "rt" || userRole == "rw")
-                        GestureDetector(
-                          onTap: _navigateToAddInfo,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: primaryColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.add, color: Colors.white, size: 18),
-                                SizedBox(width: 4),
-                                Text(
-                                  "Tambah",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              ],
-                            ),
+                      if (canManage)
+                        ElevatedButton.icon(
+                          onPressed: _navigateToAddInfo,
+                          icon: const Icon(Icons.add, color: Colors.white),
+                          label: const Text("Tambah",
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                         ),
                     ],
@@ -249,20 +213,75 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
                               itemBuilder: (context, index) {
                                 final info = _listInformasi[index];
                                 final image = info["image"] ?? "";
+                                final imageUrl = image.isNotEmpty
+                                    ? "http://127.0.0.1:8000/storage/$image"
+                                    : null;
 
-                                return InfoCardWidgetRT(
-                                  imagePath: image.isNotEmpty ? image : "assets/images/default.jpg",
-                                  title: info["title"] ?? "",
-                                  subtitle: info["location"] ?? "",
-                                  onEdit: () {
-                                    showInfoDetailDialog(
-                                      context,
-                                      info,
-                                      (updated) => _updateInformasi(info["id"], updated),
-                                      (id) => _deleteInformasi(id),
-                                    );
-                                  },
-                                  onDelete: () => _deleteInformasi(info["id"]),
+                                return Card(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  elevation: 3,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (imageUrl != null)
+                                        ClipRRect(
+                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                          child: Image.network(
+                                            imageUrl,
+                                            height: 180,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => Container(
+                                              height: 180,
+                                              color: Colors.grey.shade200,
+                                              alignment: Alignment.center,
+                                              child: const Text("Gambar tidak tersedia"),
+                                            ),
+                                          ),
+                                        ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              info["title"] ?? "",
+                                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.place, size: 16, color: Colors.grey),
+                                                const SizedBox(width: 4),
+                                                Text(info["location"] ?? "-", style: const TextStyle(color: Colors.grey)),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(info["description"] ?? ""),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children: [
+                                                if (canManage)
+                                                  TextButton.icon(
+                                                    onPressed: () => _openEditDialog(info),
+                                                    icon: const Icon(Icons.edit, color: Colors.blue),
+                                                    label: const Text("Edit", style: TextStyle(color: Colors.blue)),
+                                                  ),
+                                                if (canManage)
+                                                  TextButton.icon(
+                                                    onPressed: () => _confirmDelete(info["id"]),
+                                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                                    label: const Text("Hapus", style: TextStyle(color: Colors.red)),
+                                                  ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 );
                               },
                             ),
@@ -271,6 +290,27 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(int id) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Hapus Informasi"),
+        content: const Text("Yakin ingin menghapus informasi ini?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteInformasi(id);
+            },
+            child: const Text("Hapus"),
           ),
         ],
       ),
