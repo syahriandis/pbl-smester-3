@@ -1,125 +1,194 @@
+import 'dart:io' show File;
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class TambahPengaduanDialog extends StatefulWidget {
   final Function(Map<String, dynamic>) onSubmit;
+  final String token;
 
-  const TambahPengaduanDialog({super.key, required this.onSubmit});
+  const TambahPengaduanDialog({
+    super.key,
+    required this.onSubmit,
+    required this.token,
+  });
 
   @override
-  _TambahPengaduanDialogState createState() => _TambahPengaduanDialogState();
+  State<TambahPengaduanDialog> createState() => _TambahPengaduanDialogState();
 }
 
 class _TambahPengaduanDialogState extends State<TambahPengaduanDialog> {
-  final _deskripsiController = TextEditingController();
-  String? _selectedKategori;
-  final String _status = 'Pending';
-  File? _image;
+  final titleController = TextEditingController();
+  final locationController = TextEditingController();
+  final descController = TextEditingController();
 
-  final List<String> _kategoriList = [
-    'Kerusakan',
-    'Kebersihan',
-    'Keamanan',
-    'Pelayanan',
-  ];
+  File? selectedImageFile;
+  Uint8List? selectedImageBytes;
+  String? fileName;
+  bool isSubmitting = false;
 
-  final ImagePicker _picker = ImagePicker();
+  Future<void> _submit() async {
+    if (titleController.text.trim().isEmpty || descController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Judul dan deskripsi wajib diisi")),
+      );
+      return;
+    }
+
+    setState(() => isSubmitting = true);
+    try {
+      final uri = Uri.parse(kIsWeb
+          ? "http://localhost:8000/api/pengaduan"
+          : "http://127.0.0.1:8000/api/pengaduan");
+
+      final request = http.MultipartRequest("POST", uri)
+        ..headers['Authorization'] = "Bearer ${widget.token}"
+        ..fields['title'] = titleController.text.trim()
+        ..fields['location'] = locationController.text.trim()
+        ..fields['description'] = descController.text.trim();
+
+      if (kIsWeb && selectedImageBytes != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'image',
+          selectedImageBytes!,
+          filename: fileName ?? "upload.jpg",
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      } else if (!kIsWeb && selectedImageFile != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'image',
+          selectedImageFile!.path,
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      }
+
+      final response = await request.send();
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Pengaduan berhasil dikirim")),
+        );
+        widget.onSubmit({
+          "title": titleController.text,
+          "location": locationController.text,
+          "description": descController.text,
+          "status": "pending",
+          "created_at": DateTime.now().toString(),
+        });
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal kirim pengaduan (${response.statusCode})")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      setState(() => isSubmitting = false);
+    }
+  }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-    ); // Pilih dari galeri
-    if (image != null) {
-      setState(() {
-        _image = File(image.path); // Menyimpan path gambar yang dipilih
-      });
+    if (kIsWeb) {
+      final result = await FilePicker.platform.pickFiles(type: FileType.image);
+      if (result != null && result.files.single.bytes != null) {
+        setState(() {
+          selectedImageBytes = result.files.single.bytes!;
+          fileName = result.files.single.name;
+        });
+      }
+    } else {
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (picked != null) {
+        setState(() {
+          selectedImageFile = File(picked.path);
+          fileName = picked.name;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Tambah Pengaduan'),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text("Tambah Pengaduan", style: TextStyle(fontWeight: FontWeight.bold)),
       content: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Kategori Pengaduan'),
-            DropdownButtonFormField<String>(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+            _buildTextField(titleController, "Judul", Icons.title),
+            const SizedBox(height: 12),
+            _buildTextField(locationController, "Lokasi", Icons.place),
+            const SizedBox(height: 12),
+            _buildTextField(descController, "Deskripsi", Icons.description, maxLines: 3),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade600,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-              value: _selectedKategori,
-              items: _kategoriList.map((kategori) {
-                return DropdownMenuItem(value: kategori, child: Text(kategori));
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedKategori = value;
-                });
-              },
-              hint: const Text('Pilih kategori'),
+              onPressed: _pickImage,
+              icon: const Icon(Icons.image),
+              label: const Text("Pilih Gambar"),
             ),
-            const SizedBox(height: 10),
-            const Text('Deskripsi Pengaduan'),
-            TextField(
-              controller: _deskripsiController,
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: 'Deskripsi pengaduan...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+            const SizedBox(height: 8),
+            Text(
+              fileName ?? "Belum ada gambar dipilih",
+              style: const TextStyle(color: Colors.grey),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            if (kIsWeb && selectedImageBytes != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(selectedImageBytes!, height: 160, fit: BoxFit.cover),
+              )
+            else if (!kIsWeb && selectedImageFile != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(selectedImageFile!, height: 160, fit: BoxFit.cover),
               ),
-            ),
-            const SizedBox(height: 10),
-            TextButton(onPressed: _pickImage, child: const Text('Pilih Foto')),
-            const SizedBox(height: 10),
-            _image != null
-                ? Image.file(_image!) // Menampilkan gambar yang dipilih
-                : const Text('Belum ada foto yang dipilih'),
           ],
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Batal'),
-        ),
-        TextButton(
-          onPressed: () {
-            if (_selectedKategori == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Kategori harus dipilih')),
-              );
-            } else if (_deskripsiController.text.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Deskripsi tidak boleh kosong')),
-              );
-            } else {
-              final pengaduan = {
-                'kategori': _selectedKategori,
-                'deskripsi': _deskripsiController.text,
-                'status': _status,
-                'tanggal': DateTime.now().toString(),
-                'foto': _image, // Menyimpan foto yang di-upload
-              };
-              widget.onSubmit(pengaduan);
-              Navigator.pop(context);
-            }
-          },
-          child: const Text('Kirim'),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green.shade600,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          onPressed: isSubmitting ? null : _submit,
+          child: isSubmitting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text("Kirim"),
         ),
       ],
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon,
+      {int maxLines = 1}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+      ),
     );
   }
 }

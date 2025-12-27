@@ -1,249 +1,184 @@
-import 'dart:convert';
-import 'dart:io';
+import 'dart:io' show File;
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:login_tes/constants/colors.dart';
+import 'package:http_parser/http_parser.dart';
 
-class InfoCreateDialog extends StatefulWidget {
-  final Function onCreated;
+Future<bool?> showCreateInformasiDialog({
+  required BuildContext context,
+  required String token,
+}) async {
+  final titleController = TextEditingController();
+  final locationController = TextEditingController();
+  final descController = TextEditingController();
 
-  const InfoCreateDialog({super.key, required this.onCreated});
+  File? selectedImageFile;
+  Uint8List? selectedImageBytes;
+  String? fileName;
+  bool isSubmitting = false;
 
-  @override
-  State<InfoCreateDialog> createState() => _InfoCreateDialogState();
-}
-
-class _InfoCreateDialogState extends State<InfoCreateDialog> {
-  final _formKey = GlobalKey<FormState>();
-
-  final TextEditingController titleC = TextEditingController();
-  final TextEditingController descC = TextEditingController();
-  final TextEditingController dateC = TextEditingController();
-  final TextEditingController dayC = TextEditingController();
-  final TextEditingController timeC = TextEditingController();
-  final TextEditingController locationC = TextEditingController();
-
-  File? selectedImage;
-  Uint8List? imageBytes;
-
-  @override
-  void dispose() {
-    titleC.dispose();
-    descC.dispose();
-    dateC.dispose();
-    dayC.dispose();
-    timeC.dispose();
-    locationC.dispose();
-    super.dispose();
-  }
-
-  Future<void> pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      final bytes = await picked.readAsBytes();
-      setState(() {
-        imageBytes = bytes;
-        if (!kIsWeb) selectedImage = File(picked.path);
-      });
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      dateC.text =
-          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-    }
-  }
-
-  Future<void> submit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString("token");
-
-    var request = http.MultipartRequest(
-      "POST",
-      Uri.parse("http://127.0.0.1:8000/api/informasi"),
-    );
-
-    request.headers["Authorization"] = "Bearer $token";
-
-    request.fields["title"] = titleC.text;
-    request.fields["description"] = descC.text;
-    request.fields["date"] = dateC.text;
-    request.fields["day"] = dayC.text;
-    request.fields["time"] = timeC.text;
-    request.fields["location"] = locationC.text;
-
-    if (!kIsWeb && selectedImage != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath("image", selectedImage!.path),
-      );
-    }
-
-    var response = await request.send();
-    var result = await response.stream.bytesToString();
-
-    try {
-      final data = jsonDecode(result);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        Navigator.pop(context, true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              data["message"] ?? "Gagal menambah data. Status: ${response.statusCode}",
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error parsing response: $e")),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(18),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Tambah Informasi",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: titleC,
-                decoration: const InputDecoration(labelText: "Judul"),
-                validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
-              ),
-              TextFormField(
-                controller: descC,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: "Deskripsi"),
-                validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
-              ),
-              TextFormField(
-                controller: dateC,
-                readOnly: true,
-                onTap: () => _selectDate(context),
-                decoration: const InputDecoration(
-                  labelText: "Tanggal (YYYY-MM-DD)",
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
-              ),
-              TextFormField(
-                controller: dayC,
-                decoration: const InputDecoration(labelText: "Hari"),
-                validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
-              ),
-              TextFormField(
-                controller: timeC,
-                decoration: const InputDecoration(labelText: "Jam"),
-                validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
-              ),
-              TextFormField(
-                controller: locationC,
-                decoration: const InputDecoration(labelText: "Lokasi"),
-                validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
-              ),
-
-              const SizedBox(height: 12),
-
-              GestureDetector(
-                onTap: pickImage,
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.image),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: Text(
-                          imageBytes == null
-                              ? "Pilih gambar (bebas rasio)"
-                              : "Gambar dipilih",
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              if (imageBytes != null) ...[
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.memory(
-                    imageBytes!,
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 20),
-
-              ElevatedButton(
-                onPressed: submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                  minimumSize: const Size(double.infinity, 40),
-                ),
-                child: const Text(
-                  "Simpan",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text("Batal"),
-              ),
+  return showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.info_outline, color: Colors.blue),
+              SizedBox(width: 8),
+              Text("Tambah Informasi", style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildTextField(titleController, "Judul", Icons.title),
+                const SizedBox(height: 12),
+                _buildTextField(locationController, "Lokasi", Icons.place),
+                const SizedBox(height: 12),
+                _buildTextField(descController, "Deskripsi", Icons.description, maxLines: 3),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () async {
+                    if (kIsWeb) {
+                      final result = await FilePicker.platform.pickFiles(type: FileType.image);
+                      if (result != null && result.files.single.bytes != null) {
+                        setState(() {
+                          selectedImageBytes = result.files.single.bytes!;
+                          fileName = result.files.single.name;
+                        });
+                      }
+                    } else {
+                      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+                      if (picked != null) {
+                        setState(() {
+                          selectedImageFile = File(picked.path);
+                          fileName = picked.name;
+                        });
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.image),
+                  label: const Text("Pilih Gambar"),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  fileName ?? "Belum ada gambar dipilih",
+                  style: const TextStyle(color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                if (kIsWeb && selectedImageBytes != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.memory(selectedImageBytes!, height: 160, fit: BoxFit.cover),
+                  )
+                else if (!kIsWeb && selectedImageFile != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(selectedImageFile!, height: 160, fit: BoxFit.cover),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade600,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: isSubmitting
+                  ? null
+                  : () async {
+                      if (titleController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Judul wajib diisi")),
+                        );
+                        return;
+                      }
+                      setState(() => isSubmitting = true);
+                      try {
+                        final uri = Uri.parse(kIsWeb
+                            ? "http://localhost:8000/api/informasi"
+                            : "http://127.0.0.1:8000/api/informasi");
+
+                        final request = http.MultipartRequest("POST", uri)
+                          ..headers['Authorization'] = "Bearer $token"
+                          ..fields['title'] = titleController.text.trim()
+                          ..fields['location'] = locationController.text.trim()
+                          ..fields['description'] = descController.text.trim();
+
+                        if (kIsWeb && selectedImageBytes != null) {
+                          request.files.add(http.MultipartFile.fromBytes(
+                            'image',
+                            selectedImageBytes!,
+                            filename: fileName ?? "upload.jpg",
+                            contentType: MediaType('image', 'jpeg'),
+                          ));
+                        } else if (!kIsWeb && selectedImageFile != null) {
+                          request.files.add(await http.MultipartFile.fromPath(
+                            'image',
+                            selectedImageFile!.path,
+                            contentType: MediaType('image', 'jpeg'),
+                          ));
+                        }
+
+                        final response = await request.send();
+                        if (response.statusCode == 201) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Informasi berhasil dibuat")),
+                          );
+                          Navigator.pop(context, true);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Gagal membuat informasi (${response.statusCode})")),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Error: $e")),
+                        );
+                      } finally {
+                        setState(() => isSubmitting = false);
+                      }
+                    },
+              child: isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text("Simpan"),
+            ),
+          ],
         ),
-      ),
-    );
-  }
+      );
+    },
+  );
 }
 
-Future<bool?> showCreateInformasiDialog(
-    BuildContext context, Future<void> Function() onCreated) {
-  return showDialog<bool?>(
-    context: context,
-    builder: (_) => InfoCreateDialog(onCreated: onCreated),
+Widget _buildTextField(TextEditingController controller, String label, IconData icon,
+    {int maxLines = 1}) {
+  return TextField(
+    controller: controller,
+    maxLines: maxLines,
+    decoration: InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      filled: true,
+      fillColor: Colors.grey.shade100,
+    ),
   );
 }

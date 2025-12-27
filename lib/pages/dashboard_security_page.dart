@@ -153,7 +153,7 @@ class DashboardSecurityPage extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    // ✅ LAYANAN SURAT (TOKEN ASLI)
+                    // ✅ LAYANAN SURAT
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -189,6 +189,10 @@ class DashboardSecurityPage extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           '/layananAdministrasiSecurity',
+                          arguments: {
+                            'role': role,
+                            'token': token,
+                          },
                         );
                       },
                     ),
@@ -205,7 +209,11 @@ class DashboardSecurityPage extends StatelessWidget {
                       onTap: () {
                         Navigator.pushNamed(
                           context,
-                          '/layananPengaduanWarga',
+                          '/layananPengaduanSecurity',
+                          arguments: {
+                            'role': role,
+                            'token': token,
+                          },
                         );
                       },
                     ),

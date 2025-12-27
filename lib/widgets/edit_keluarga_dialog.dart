@@ -14,6 +14,7 @@ class EditKeluargaPage extends StatefulWidget {
 class _EditKeluargaPageState extends State<EditKeluargaPage> {
   List<Map<String, dynamic>> keluarga = [];
   bool isLoading = true;
+  bool isSaving = false;
 
   final TextEditingController namaController = TextEditingController();
   final TextEditingController hubunganController = TextEditingController();
@@ -29,7 +30,25 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString("token");
   }
+Future<void> _updateKeluargaDanAlamat() async {
+  final token = await _getToken();
+  final res = await http.put(
+    Uri.parse("http://127.0.0.1:8000/api/profile"),
+    headers: {
+      "Authorization": "Bearer $token",
+      "Content-Type": "application/json",
+    },
+    body: jsonEncode({
+      "address": alamatController.text,
+      "families": keluarga.map((f) => {
+        "nama": f["nama"],
+        "hubungan": f["hubungan"],
+      }).toList(),
+    }),
+  );
 
+  debugPrint("Update status: ${res.statusCode}, body: ${res.body}");
+}
   Future<void> _loadKeluarga() async {
     final token = await _getToken();
     final res = await http.get(
@@ -44,10 +63,10 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
       setState(() {
         alamatController.text = (data["address"] ?? '').toString();
         keluarga = family.map((f) => {
-          "id": f["id"],
-          "nama": f["nama"] ?? '',
-          "hubungan": f["hubungan"] ?? '',
-        }).toList();
+              "id": f["id"],
+              "nama": f["nama"] ?? '',
+              "hubungan": f["hubungan"] ?? '',
+            }).toList();
         isLoading = false;
       });
     } else {
@@ -55,39 +74,69 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
     }
   }
 
-  // ✅ FINAL: Update alamat + kirim anggota satu per satu
-  Future<void> _updateKeluargaDanAlamat() async {
-    final token = await _getToken();
 
-    // ✅ Update alamat (kalau endpointnya ada)
-    await http.put(
-      Uri.parse("http://127.0.0.1:8000/api/profile"),
+  Future<void> _tambahKeluarga(String nama, String hubungan) async {
+    final token = await _getToken();
+    final res = await http.post(
+      Uri.parse("http://127.0.0.1:8000/api/family"),
       headers: {
         "Authorization": "Bearer $token",
         "Content-Type": "application/json",
       },
-      body: jsonEncode({
-        "address": alamatController.text,
-      }),
+      body: jsonEncode({"nama": nama, "hubungan": hubungan}),
     );
 
-    // ✅ Kirim anggota keluarga satu per satu
-    for (var f in keluarga) {
-      await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/family"),
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-        },
-        body: jsonEncode({
-          "nama": f["nama"],
-          "hubungan": f["hubungan"],
-        }),
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final created = jsonDecode(res.body);
+      setState(() {
+        keluarga.add({
+          "id": created["id"],
+          "nama": created["nama"],
+          "hubungan": created["hubungan"],
+        });
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Anggota keluarga berhasil ditambahkan"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Gagal menambah anggota: ${res.body}"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
+      Future<void> _hapusKeluarga(int id, int index) async {
+        final token = await _getToken();
+        final res = await http.delete(
+          Uri.parse("http://127.0.0.1:8000/api/family/$id"),
+          headers: {"Authorization": "Bearer $token"},
+        );
 
-  void _tambahKeluarga() {
+        if (res.statusCode == 200) {
+          setState(() {
+            keluarga.removeAt(index);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Anggota keluarga berhasil dihapus"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Gagal menghapus: ${res.body}"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+  void _showTambahDialog() {
     namaController.clear();
     hubunganController.clear();
 
@@ -95,6 +144,7 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           title: const Text("Tambah Anggota Keluarga"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -132,14 +182,21 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
               child: const Text("Batal"),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-              onPressed: () {
-                setState(() {
-                  keluarga.add({
-                    "nama": namaController.text,
-                    "hubungan": hubunganController.text,
-                  });
-                });
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () async {
+                if (namaController.text.isEmpty || hubunganController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Nama dan hubungan harus diisi"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+                await _tambahKeluarga(namaController.text, hubunganController.text);
                 Navigator.pop(context);
               },
               child: const Text("Tambah", style: TextStyle(color: whiteColor)),
@@ -148,12 +205,6 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
         );
       },
     );
-  }
-
-  void _hapusKeluarga(int index) {
-    setState(() {
-      keluarga.removeAt(index);
-    });
   }
 
   @override
@@ -178,61 +229,141 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Isi alamat rumah dengan jelas agar data keluarga tersimpan dengan benar.",
+                    style: TextStyle(color: Colors.grey),
+                  ),
                   const SizedBox(height: 16),
+
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: keluarga.length,
-                      itemBuilder: (context, index) {
-                        final item = keluarga[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 10),
+                    child: keluarga.isEmpty
+                        ? const Center(child: Text("Belum ada anggota keluarga"))
+                        : ListView.builder(
+                            itemCount: keluarga.length,
+                            itemBuilder: (context, index) {
+                              final item = keluarga[index];
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 3,
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: secondaryColor,
+                                    child: const Icon(Icons.person, color: whiteColor),
+                                  ),
+                                  title: Text(
+                                    (item["nama"] ?? '').toString(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  subtitle: Text((item["hubungan"] ?? '').toString()),
+                                  trailing: IconButton(
+                                  onPressed: () async {
+                                    final id = item["id"];
+                                    if (id != null) {
+                                      await _hapusKeluarga(id, index);
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text("Data keluarga tidak valid"),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+
+                  const Text(
+                    "Gunakan tombol di bawah untuk menambah anggota keluarga atau menyimpan perubahan.",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: secondaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: _showTambahDialog,
+                          icon: const Icon(Icons.add, color: whiteColor),
+                          label: const Text("Tambah", style: TextStyle(color: whiteColor)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                     Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          elevation: 2,
-                          child: ListTile(
-                            leading: const Icon(Icons.person, color: primaryColor),
-                            title: Text(
-                              item["nama"],
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(item["hubungan"]),
-                            trailing: IconButton(
-                              onPressed: () => _hapusKeluarga(index),
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: isSaving
+                            ? null
+                            : () async {
+                                setState(() => isSaving = true);
+                                try {
+                                  await _updateKeluargaDanAlamat();
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text("Data keluarga & alamat berhasil disimpan"),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                    Navigator.pop(context, true);
+                                  }
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text("Gagal menyimpan: $e"),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                } finally {
+                                  if (mounted) setState(() => isSaving = false);
+                                }
+                              },
+                        icon: isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: whiteColor,
+                                ),
+                              )
+                            : const Icon(Icons.save, color: whiteColor),
+                        label: Text(
+                          isSaving ? "Menyimpan..." : "Simpan",
+                          style: const TextStyle(color: whiteColor),
                         ),
                       ),
-                      onPressed: () async {
-                        await _updateKeluargaDanAlamat();
-                        Navigator.pop(context, true);
-                      },
-                      child: const Text(
-                        "Simpan Perubahan",
-                        style: TextStyle(color: whiteColor, fontSize: 16),
-                      ),
                     ),
+
+                    ],
                   ),
                 ],
               ),
             ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: primaryColor,
-        onPressed: _tambahKeluarga,
-        child: const Icon(Icons.add, color: whiteColor),
-      ),
     );
   }
 }

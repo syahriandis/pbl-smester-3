@@ -10,6 +10,7 @@ use App\Http\Controllers\InformasiController;
 use App\Http\Controllers\JenisSuratController;
 use App\Http\Controllers\SuratPengajuanController;
 use App\Http\Controllers\SuratRTController;
+use App\Http\Controllers\PengaduanController;
 
 // =========================
 // LOGIN (TIDAK BUTUH TOKEN)
@@ -30,16 +31,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/jenis-surat', [JenisSuratController::class, 'store']);
     Route::delete('/jenis-surat/{id}', [JenisSuratController::class, 'destroy']);
 
-    // ======== SURAT WARGA (UNTUK FLUTTER WARGA) ========
-    Route::get('/warga/surat', [SuratPengajuanController::class, 'indexWarga']);  // khusus warga login
-    Route::post('/warga/surat', [SuratPengajuanController::class, 'store']);      // ajukan surat
+    // ======== SURAT WARGA ========
+    Route::get('/warga/surat', [SuratPengajuanController::class, 'indexWarga']);
+    Route::post('/warga/surat', [SuratPengajuanController::class, 'store']);
 
-    // ======== SURAT RT (LIST SEMUA SURAT UNTUK RT/RW) ========
+    // ======== SURAT RT ========
     Route::get('/rt/surat', [SuratRTController::class, 'index']);
     Route::get('/rt/surat/{id}', [SuratRTController::class, 'show']);
     Route::put('/rt/surat/{id}', [SuratRTController::class, 'update']);
     Route::post('/rt/surat/{id}/upload', [SuratRTController::class, 'uploadSurat']);
-
 
     // ======== INFORMASI ========
     Route::get('/informasi', [InformasiController::class, 'index']);
@@ -50,8 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // ======== PROFILE ========
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
+    Route::put('/profile', [ProfileController::class, 'update']); // update address/phone
 
-    // ======== KELUARGA ========
+    // ======== FAMILY ========
     Route::post('/family', [FamilyController::class, 'store']);
     Route::delete('/family/{id}', [FamilyController::class, 'destroy']);
 
@@ -59,4 +60,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    // ======== PENGADUAN ========
+    // Warga
+    Route::post('/pengaduan', [PengaduanController::class, 'store']);
+    Route::get('/pengaduan', [PengaduanController::class, 'indexWarga']);
+
+    // RT
+    Route::get('/rt/pengaduan', [PengaduanController::class, 'indexRT']);
+    Route::put('/rt/pengaduan/{id}/approve', [PengaduanController::class, 'approve']);
+    Route::put('/rt/pengaduan/{id}/reject', [PengaduanController::class, 'reject']);
+
+    // Security
+    Route::get('/security/pengaduan', [PengaduanController::class, 'indexSecurity']);
+    Route::put('/security/pengaduan/{id}/feedback', [PengaduanController::class, 'feedback']);
+    Route::put('/security/pengaduan/{id}/done', [PengaduanController::class, 'done']);
 });

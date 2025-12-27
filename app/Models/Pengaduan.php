@@ -4,33 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\JenisPengaduan;
-use App\Models\User;
 
 class Pengaduan extends Model
 {
     use HasFactory;
 
-    protected $table = 'pengaduans';
-    protected $primaryKey = 'id_pengaduan';
+    protected $table = 'pengaduan';
 
+    // Kolom yang bisa diisi
     protected $fillable = [
-        'id_user',
-        'id_jenis_pengaduan',
-        'isi_pengaduan',
-        'foto_bukti',
-        'status_pengaduan',
+        'user_id',
+        'title',
+        'location',
+        'description',
+        'image',
+        'status',
+        'feedback',
     ];
 
-    // Relasi ke User
+    // Relasi ke User (warga yang buat pengaduan)
     public function user()
     {
-        return $this->belongsTo(User::class, 'id_user');
-    }
-
-    // Relasi ke Jenis Pengaduan
-    public function jenisPengaduan()
-    {
-        return $this->belongsTo(JenisPengaduan::class, 'id_jenis_pengaduan');
+        return $this->belongsTo(User::class);
     }
 }

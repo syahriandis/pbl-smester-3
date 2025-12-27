@@ -77,4 +77,36 @@ class ProfileController extends Controller
 
         return response()->json(['message' => 'Password berhasil diubah']);
     }
+    public function update(Request $request)
+{
+    $request->validate([
+        "address" => "nullable|string",
+        "phone"   => "nullable|string",
+    ]);
+
+    $user = $request->user();
+
+    if ($request->has("address")) {
+        $user->address = $request->address;
+    }
+    if ($request->has("phone")) {
+        $user->phone = $request->phone;
+    }
+
+    $user->save();
+
+    return response()->json([
+        "success" => true,
+        "message" => "Profil berhasil diperbarui",
+        "data"    => [
+            "name"    => $user->name,
+            "gender"  => $user->gender,
+            "phone"   => $user->phone,
+            "photo"   => $user->photo,
+            "role"    => $user->role,
+            "address" => $user->address,
+        ]
+    ]);
+}
+    
 }

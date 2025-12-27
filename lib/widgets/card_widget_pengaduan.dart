@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:login_tes/constants/colors.dart';
 
 class CardWidgetPengaduan extends StatelessWidget {
-  final String imagePath;
-  final String nama;
-  final String deskripsi;
-  final String lokasi;
-  final String status;
+  final String imagePath;   // URL gambar dari API
+  final String nama;        // Nama pengadu
+  final String deskripsi;   // Deskripsi pengaduan
+  final String lokasi;      // Lokasi pengaduan
+  final String status;      // Status dari API (pending, approved, rejected, in_progress, done)
   final VoidCallback onTolak;
   final VoidCallback onTerima;
 
@@ -20,6 +20,23 @@ class CardWidgetPengaduan extends StatelessWidget {
     required this.onTolak,
     required this.onTerima,
   });
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'pending':
+        return 'Menunggu';
+      case 'approved':
+        return 'Disetujui';
+      case 'rejected':
+        return 'Ditolak';
+      case 'in_progress':
+        return 'Diproses';
+      case 'done':
+        return 'Selesai';
+      default:
+        return status;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,16 +59,16 @@ class CardWidgetPengaduan extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gambar pengaduan
+            // Gambar pengaduan dari URL
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
+              child: Image.network(
                 imagePath,
-                width:
-                    screenWidth *
-                    0.25, // Ukuran gambar responsif berdasarkan lebar layar
-                height: 80, // Sesuaikan tinggi gambar
-                fit: BoxFit.cover, // Menjaga agar gambar tidak terdistorsi
+                width: screenWidth * 0.25,
+                height: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.image_not_supported, color: Colors.white),
               ),
             ),
             const SizedBox(height: 12),
@@ -60,48 +77,45 @@ class CardWidgetPengaduan extends StatelessWidget {
             Text(
               nama,
               style: const TextStyle(
-                color: Colors.white, // Nama pengadu tetap warna putih dan bold
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
             ),
             const SizedBox(height: 6),
 
-            // Deskripsi dengan teks putih, tidak bold
+            // Deskripsi
             Text(
               deskripsi,
               style: const TextStyle(
-                color: Colors.white, // Warna putih
+                color: Colors.white,
                 fontSize: 14,
-                fontWeight: FontWeight.normal, // Tidak bold
               ),
             ),
             const SizedBox(height: 6),
 
-            // Lokasi dengan teks putih, tidak bold
+            // Lokasi
             Text(
               lokasi,
               style: const TextStyle(
-                color: Colors.white, // Warna putih
+                color: Colors.white,
                 fontSize: 12,
-                fontWeight: FontWeight.normal, // Tidak bold
               ),
             ),
             const SizedBox(height: 12),
 
-            // Status dengan warna putih juga
+            // Status
             Text(
-              'Status: $status',
+              'Status: ${_statusLabel(status)}',
               style: const TextStyle(
-                color: Colors.white, // Warna putih
-                fontWeight: FontWeight.normal, // Tidak bold
+                color: Colors.white,
                 fontSize: 14,
               ),
             ),
             const SizedBox(height: 12),
 
-            // Tombol Tolak dan Terima dipindah ke bawah
-            if (status == 'Menunggu') ...[
+            // Tombol Tolak & Terima hanya muncul kalau status pending
+            if (status == 'pending') ...[
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Row(
@@ -109,31 +123,25 @@ class CardWidgetPengaduan extends StatelessWidget {
                   children: [
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red, // Tombol Tolak
+                        backgroundColor: Colors.red,
                         minimumSize: const Size(80, 36),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       onPressed: onTolak,
-                      child: const Text(
-                        'Tolak',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: const Text('Tolak', style: TextStyle(color: Colors.white)),
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green, // Tombol Terima
+                        backgroundColor: Colors.green,
                         minimumSize: const Size(80, 36),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       onPressed: onTerima,
-                      child: const Text(
-                        'Terima',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: const Text('Terima', style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),

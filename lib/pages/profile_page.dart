@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:login_tes/constants/colors.dart';
+import 'package:login_tes/widgets/edit_keluarga_dialog.dart';
 
 // Layouts
 import 'package:login_tes/widgets/main_layout.dart';
@@ -10,7 +11,7 @@ import 'package:login_tes/widgets/main_layout_rt.dart';
 
 // Dialogs
 import 'package:login_tes/widgets/ganti_password_dialog.dart';
-import 'package:login_tes/widgets/edit_keluarga_dialog.dart';
+
 
 class ProfilePage extends StatefulWidget {
   final String token;
@@ -64,7 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Pilih layout sesuai role
+    // Pilih layout sesuai role
     Widget layout;
 
     if (widget.role == "security") {
@@ -104,9 +105,23 @@ class _ProfilePageState extends State<ProfilePage> {
           }
           if (snapshot.hasError) {
             return Center(
-              child: Text(
-                "Terjadi kesalahan: ${snapshot.error}",
-                style: const TextStyle(color: Colors.red),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Terjadi kesalahan: ${snapshot.error}",
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _profileFuture = _fetchProfile();
+                      });
+                    },
+                    child: const Text("Coba Lagi"),
+                  ),
+                ],
               ),
             );
           }
@@ -129,15 +144,26 @@ class _ProfilePageState extends State<ProfilePage> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  color: primaryColor,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [primaryColor, secondaryColor],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Image.asset('assets/images/logoputih.png', height: 50),
-                      const CircleAvatar(
-                        radius: 20,
-                        backgroundImage: AssetImage('assets/images/avatar.jpg'),
+                      CircleAvatar(
+                        radius: 22,
                         backgroundColor: whiteColor,
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/avatar.jpg',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -157,7 +183,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         children: [
                           // ROLE TITLE
                           Text(
-                            _getRoleTitle(role),
+                            _getRoleTitle(role ?? ""),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -217,14 +243,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                   color: primaryColor,
                                 ),
                               ),
-
-                              // Edit hanya untuk warga
                               if (widget.role == "warga")
                                 TextButton(
                                   onPressed: () async {
-                                    final updated = await showDialog(
-                                      context: context,
-                                      builder: (context) => const EditKeluargaPage(),
+                                    final updated = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const EditKeluargaPage()),
                                     );
                                     if (updated == true) {
                                       setState(() {
@@ -261,10 +285,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 4),
-
                                 if (families.isEmpty)
                                   const Text("Belum ada anggota keluarga"),
-
                                 for (var f in families)
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -273,7 +295,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                       Text((f["hubungan"] ?? 'Hubungan tidak tersedia').toString()),
                                     ],
                                   ),
-
                                 const SizedBox(height: 12),
                                 const Text("Alamat", style: TextStyle(fontWeight: FontWeight.bold)),
                                 Text((address ?? 'Alamat belum tersedia').toString()),
@@ -311,9 +332,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               },
                               child: const Text(
                                 "Edit",
-                                style: TextStyle(
-                                  color: whiteColor,
-                                ),
+                               
+                                style: TextStyle(color: whiteColor),
                               ),
                             ),
                           ),

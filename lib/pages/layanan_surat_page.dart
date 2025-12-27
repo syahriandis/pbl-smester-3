@@ -82,14 +82,10 @@ class _LayananSuratPageState extends State<LayananSuratPage> {
   void _showTambahSuratDialog() {
     showDialog(
       context: context,
-      builder: (context) => TambahSuratDialog(
-        token: widget.token,
-        onSubmit: (data) async {
-          Navigator.pop(context);
-          await _fetchSuratList();
-        },
-      ),
-    );
+      builder: (context) => TambahSuratDialog(token: widget.token),
+    ).then((_) async {
+      await _fetchSuratList(); // refresh list setelah dialog ditutup
+    });
   }
 
   void _showDetailSurat(Map<String, dynamic> surat) {
