@@ -10,6 +10,7 @@ use App\Http\Controllers\InformasiController;
 use App\Http\Controllers\JenisSuratController;
 use App\Http\Controllers\SuratPengajuanController;
 use App\Http\Controllers\SuratRTController;
+use App\Http\Controllers\PengaduanController;
 
 // =========================
 // LOGIN (TIDAK BUTUH TOKEN)
@@ -49,8 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ======== PROFILE ========
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
-    // ✅ kalau mau update address/phone, bisa tambahin:
-    Route::put('/profile', [ProfileController::class, 'update']);
+    Route::put('/profile', [ProfileController::class, 'update']); // update address/phone
 
     // ======== FAMILY ========
     Route::post('/family', [FamilyController::class, 'store']);
@@ -60,4 +60,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    // ======== PENGADUAN ========
+    // Warga
+    Route::post('/pengaduan', [PengaduanController::class, 'store']);
+    Route::get('/pengaduan', [PengaduanController::class, 'indexWarga']);
+
+    // RT
+    Route::get('/rt/pengaduan', [PengaduanController::class, 'indexRT']);
+    Route::put('/rt/pengaduan/{id}/approve', [PengaduanController::class, 'approve']);
+    Route::put('/rt/pengaduan/{id}/reject', [PengaduanController::class, 'reject']);
+
+    // Security
+    Route::get('/security/pengaduan', [PengaduanController::class, 'indexSecurity']);
+    Route::put('/security/pengaduan/{id}/feedback', [PengaduanController::class, 'feedback']);
+    Route::put('/security/pengaduan/{id}/done', [PengaduanController::class, 'done']);
 });

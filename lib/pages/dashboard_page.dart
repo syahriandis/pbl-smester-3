@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout.dart';
 
@@ -18,7 +17,7 @@ class DashboardPage extends StatelessWidget {
     print("TOKEN DARI LOGIN (DASHBOARD): $token");
     print("ROLE DARI LOGIN (DASHBOARD): $role");
 
-   return MainLayout(
+    return MainLayout(
       selectedIndex: 0,
       token: token,
       role: role,
@@ -33,6 +32,7 @@ class DashboardPage extends StatelessWidget {
     return SafeArea(
       child: Column(
         children: [
+          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -65,6 +65,7 @@ class DashboardPage extends StatelessWidget {
             ),
           ),
 
+          // Body
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -110,7 +111,14 @@ class DashboardPage extends StatelessWidget {
                       title: 'Layanan Pengaduan',
                       subtitle: 'Forum pengaduan dengan mengisi form',
                       onTap: () {
-                        Navigator.pushNamed(context, '/layananPengaduan');
+                        Navigator.pushNamed(
+                          context,
+                          '/layananPengaduan',
+                          arguments: {
+                            'role': role,
+                            'token': token,
+                          },
+                        );
                       },
                     ),
 
@@ -126,7 +134,14 @@ class DashboardPage extends StatelessWidget {
                       title: 'Layanan Administrasi',
                       subtitle: 'Dapat membayar uang iuran dan sebagainya',
                       onTap: () {
-                        Navigator.pushNamed(context, '/layananAdministrasi');
+                        Navigator.pushNamed(
+                          context,
+                          '/layananAdministrasi',
+                          arguments: {
+                            'role': role,
+                            'token': token,
+                          },
+                        );
                       },
                     ),
                   ],

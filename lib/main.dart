@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/layanan_surat_page.dart';
-import 'pages/layanan_pengaduan_page.dart' as LayananPengaduanFrontend;
+import 'pages/layanan_pengaduan_page.dart';
 import 'pages/layanan_administrasi_page.dart';
 
 // SECURITY
 import 'pages/dashboard_security_page.dart';
-import 'pages/layanan_pengaduan_warga_page.dart';
+import 'pages/layanan_pengaduan_security_page.dart'; // ✅ ganti nama file sesuai final class
 import 'pages/layanan_administrasi_security.dart';
 
-// RT & RW (SAMA)
+// RT / RW
 import 'pages/dashboard_page_rt.dart';
 import 'pages/riwayat_page_rt.dart';
 import 'pages/layanan_surat_page_rt.dart';
@@ -53,25 +53,33 @@ class MyApp extends StatelessWidget {
           );
         },
 
-      '/layananPengaduan': (context) {
-        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        return LayananPengaduanFrontend.LayananPengaduanPage(
-          token: args['token'],
-          role: args['role'],
-        );
-      },
-
-      '/layananAdministrasi': (context) {
-        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        return LayananAdministrasiPage(
-          token: args['token'],
-          role: args['role'],
-        );
-      },
-
-       '/layananPengaduanWarga': (context) {
+        '/layananPengaduan': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return LayananPengaduanWargaPage(
+          return LayananPengaduanPage(
+            token: args['token'],
+            role: args['role'],
+          );
+        },
+        '/layananAdministrasi': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return LayananAdministrasiPage(
+            token: args['token'],
+            role: args['role'],
+          );
+        },
+
+        // ✅ SECURITY
+        '/dashboardSecurity': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return DashboardSecurityPage(
+            token: args['token'],
+            role: args['role'],
+          );
+        },
+
+        '/layananPengaduanSecurity': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return LayananPengaduanSecurityPage(
             token: args['token'],
             role: args['role'],
           );
@@ -85,7 +93,7 @@ class MyApp extends StatelessWidget {
           );
         },
 
-        // ✅ DASHBOARD RT / RW (SAMA)
+        // ✅ DASHBOARD RT / RW
         '/rtDashboard': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return DashboardPageRT(
@@ -132,7 +140,6 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         if (settings.name == '/layananSurat') {
           final args = settings.arguments as Map<String, dynamic>;
-
           return MaterialPageRoute(
             builder: (_) => LayananSuratPage(
               role: args['role'],
@@ -143,7 +150,6 @@ class MyApp extends StatelessWidget {
 
         if (settings.name == '/layananSuratRT') {
           final args = settings.arguments as Map<String, dynamic>;
-
           return MaterialPageRoute(
             builder: (_) => LayananSuratPageRT(
               tokenRT: args['tokenRT'],
