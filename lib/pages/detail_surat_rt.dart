@@ -31,7 +31,6 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
     _fetchDetail();
   }
 
-  // ✅ GET DETAIL SURAT
   Future<void> _fetchDetail() async {
     final res = await http.get(
       Uri.parse("http://127.0.0.1:8000/api/rt/surat/${widget.idPengajuan}"),

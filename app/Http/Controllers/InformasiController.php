@@ -8,10 +8,21 @@ use Illuminate\Support\Facades\Auth;
 
 class InformasiController extends Controller
 {
-    // Ambil semua informasi
+    /**
+     * Ambil semua informasi + status baca per user login
+     */
     public function index()
     {
-        $informasi = Informasi::with('user')->orderBy('date', 'desc')->get();
+        $userId = Auth::id();
+
+        $informasi = Informasi::with('user')
+            ->withCount([
+                'readers as is_read' => function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                }
+            ])
+            ->orderBy('date', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -19,7 +30,9 @@ class InformasiController extends Controller
         ]);
     }
 
-    // Simpan informasi baru
+    /**
+     * Simpan informasi baru (RT/RW)
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -38,14 +51,14 @@ class InformasiController extends Controller
         }
 
         $informasi = Informasi::create([
-            'user_id'    => Auth::id(),
-            'title'      => $request->title,
-            'description'=> $request->description,
-            'date'       => $request->date,
-            'day'        => $request->day,
-            'time'       => $request->time,
-            'location'   => $request->location,
-            'image'      => $path ? 'storage/'.$path : null,
+            'user_id'     => Auth::id(),
+            'title'       => $request->title,
+            'description' => $request->description,
+            'date'        => $request->date,
+            'day'         => $request->day,
+            'time'        => $request->time,
+            'location'    => $request->location,
+            'image'       => $path,
         ]);
 
         return response()->json([
@@ -55,7 +68,9 @@ class InformasiController extends Controller
         ], 201);
     }
 
-    // Update informasi
+    /**
+     * Update informasi
+     */
     public function update(Request $request, $id)
     {
         $informasi = Informasi::findOrFail($id);
@@ -72,11 +87,16 @@ class InformasiController extends Controller
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('informasi', 'public');
-            $informasi->image = 'storage/'.$path;
+            $informasi->image = $path;
         }
 
         $informasi->update($request->only([
-            'title', 'description', 'date', 'day', 'time', 'location'
+            'title',
+            'description',
+            'date',
+            'day',
+            'time',
+            'location'
         ]));
 
         return response()->json([
@@ -86,7 +106,9 @@ class InformasiController extends Controller
         ]);
     }
 
-    // Hapus informasi
+    /**
+     * Hapus informasi
+     */
     public function destroy($id)
     {
         $informasi = Informasi::findOrFail($id);
@@ -95,6 +117,23 @@ class InformasiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Informasi berhasil dihapus'
+        ]);
+    }
+
+    /**
+     * Tandai informasi sebagai dibaca oleh user login
+     */
+    public function markAsRead($id)
+    {
+        $user = Auth::user();
+
+        $user->readInformasis()->syncWithoutDetaching([
+            $id => ['read_at' => now()]
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Informasi ditandai sebagai dibaca'
         ]);
     }
 }

@@ -25,6 +25,7 @@ class _DetailPengaduanDialogState extends State<DetailPengaduanDialog> {
   bool _loading = false;
 
   Future<void> _updateStatus(String action, {String? feedback}) async {
+    if (!mounted) return;
     setState(() => _loading = true);
     try {
       final id = widget.pengaduan['id'];
@@ -41,6 +42,7 @@ class _DetailPengaduanDialogState extends State<DetailPengaduanDialog> {
             : null,
       );
 
+      if (!mounted) return;
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Aksi berhasil: $action")),
@@ -53,11 +55,13 @@ class _DetailPengaduanDialogState extends State<DetailPengaduanDialog> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
+      }
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -65,12 +69,14 @@ class _DetailPengaduanDialogState extends State<DetailPengaduanDialog> {
   Widget build(BuildContext context) {
     final p = widget.pengaduan;
     final status = p['status']?.toString().toLowerCase() ?? '';
-    final hasFeedback = p['feedback'] != null && p['feedback'].toString().isNotEmpty;
+    final hasFeedback =
+        p['feedback'] != null && p['feedback'].toString().isNotEmpty;
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.all(16),
-      title: const Text("Detail Pengaduan", style: TextStyle(fontWeight: FontWeight.bold)),
+      title: const Text("Detail Pengaduan",
+          style: TextStyle(fontWeight: FontWeight.bold)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -79,17 +85,21 @@ class _DetailPengaduanDialogState extends State<DetailPengaduanDialog> {
             if (p['image'] != null && p['image'].toString().isNotEmpty)
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  "http://localhost:8000/${p['image']}",
-                  height: 160,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Text("Gambar tidak tersedia"),
+                child: MouseRegion(
+                  onExit: (_) {}, // clear pointer supaya tidak crash
+                  child: Image.network(
+                    "http://localhost:8000/${p['image']}",
+                    height: 160,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Text("Gambar tidak tersedia"),
+                  ),
                 ),
               ),
             const SizedBox(height: 12),
-            Text("📝 Judul: ${p['title'] ?? '-'}", style: const TextStyle(fontSize: 16)),
+            Text("📝 Judul: ${p['title'] ?? '-'}",
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 6),
             Text("📍 Lokasi: ${p['location'] ?? '-'}"),
             const SizedBox(height: 6),
@@ -136,7 +146,9 @@ class _DetailPengaduanDialogState extends State<DetailPengaduanDialog> {
       actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (mounted) Navigator.pop(context);
+          },
           child: const Text("Tutup"),
         ),
         if (_loading)
@@ -144,7 +156,6 @@ class _DetailPengaduanDialogState extends State<DetailPengaduanDialog> {
             padding: EdgeInsets.all(8.0),
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-
         if (widget.role == "rt" && status == "pending") ...[
           ElevatedButton.icon(
             icon: const Icon(Icons.check),
@@ -159,15 +170,14 @@ class _DetailPengaduanDialogState extends State<DetailPengaduanDialog> {
             label: const Text("Reject"),
           ),
         ],
-
         if (widget.role == "security" && status == "approved")
           ElevatedButton.icon(
             icon: const Icon(Icons.send),
             style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-            onPressed: () => _updateStatus("feedback", feedback: feedbackController.text),
+            onPressed: () =>
+                _updateStatus("feedback", feedback: feedbackController.text),
             label: const Text("Kirim Feedback"),
           ),
-
         if (widget.role == "security" && status == "in_progress")
           ElevatedButton.icon(
             icon: const Icon(Icons.check_circle),

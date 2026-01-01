@@ -115,6 +115,19 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
     }
   }
 
+  // ✅ Helper function untuk generate URL gambar
+  String _getImageUrl(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return '';
+    
+    // Jika sudah full URL
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // ✅ Pakai endpoint API storage
+    return 'http://127.0.0.1:8000/api/storage/$imagePath';
+  }
+
   @override
   Widget build(BuildContext context) {
     return MainLayoutRT(
@@ -180,13 +193,17 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
                         ElevatedButton.icon(
                           onPressed: _navigateToAddInfo,
                           icon: const Icon(Icons.add, color: Colors.white),
-                          label: const Text("Tambah",
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),),
+                          label: const Text(
+                            "Tambah",
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                     ],
@@ -200,9 +217,15 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text("Belum ada informasi.", style: TextStyle(color: Colors.grey)),
+                                const Text(
+                                  "Belum ada informasi.",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
                                 const SizedBox(height: 8),
-                                ElevatedButton(onPressed: _loadInformasi, child: const Text("Muat Ulang")),
+                                ElevatedButton(
+                                  onPressed: _loadInformasi,
+                                  child: const Text("Muat Ulang"),
+                                ),
                               ],
                             ),
                           )
@@ -212,32 +235,92 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
                               itemCount: _listInformasi.length,
                               itemBuilder: (context, index) {
                                 final info = _listInformasi[index];
-                                final image = info["image"] ?? "";
-                                final imageUrl = image.isNotEmpty
-                                    ? "http://127.0.0.1:8000/storage/$image"
-                                    : null;
+                                final imagePath = info["image"] ?? "";
+                                final imageUrl = _getImageUrl(imagePath); // ✅ Pakai helper function
 
                                 return Card(
                                   margin: const EdgeInsets.only(bottom: 12),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   elevation: 3,
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      if (imageUrl != null)
+                                      if (imageUrl.isNotEmpty)
                                         ClipRRect(
-                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                          borderRadius: const BorderRadius.vertical(
+                                            top: Radius.circular(12),
+                                          ),
                                           child: Image.network(
                                             imageUrl,
                                             height: 180,
                                             width: double.infinity,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) => Container(
-                                              height: 180,
-                                              color: Colors.grey.shade200,
-                                              alignment: Alignment.center,
-                                              child: const Text("Gambar tidak tersedia"),
+                                            loadingBuilder: (context, child, loadingProgress) {
+                                              if (loadingProgress == null) return child;
+                                              return Container(
+                                                height: 180,
+                                                color: Colors.grey.shade200,
+                                                alignment: Alignment.center,
+                                                child: CircularProgressIndicator(
+                                                  value: loadingProgress.expectedTotalBytes != null
+                                                      ? loadingProgress.cumulativeBytesLoaded /
+                                                          loadingProgress.expectedTotalBytes!
+                                                      : null,
+                                                ),
+                                              );
+                                            },
+                                            errorBuilder: (context, error, stackTrace) {
+                                              print('❌ Error loading image: $imageUrl');
+                                              print('Error: $error');
+                                              return Container(
+                                                height: 180,
+                                                color: Colors.grey.shade200,
+                                                alignment: Alignment.center,
+                                                child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.image_not_supported,
+                                                      color: Colors.grey,
+                                                      size: 40,
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    const Text(
+                                                      "Gambar tidak tersedia",
+                                                      style: TextStyle(color: Colors.grey),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        )
+                                      else
+                                        Container(
+                                          height: 180,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade200,
+                                            borderRadius: const BorderRadius.vertical(
+                                              top: Radius.circular(12),
                                             ),
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.image,
+                                                size: 40,
+                                                color: Colors.grey.shade400,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                "Tidak ada gambar",
+                                                style: TextStyle(color: Colors.grey.shade600),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       Padding(
@@ -247,14 +330,24 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
                                           children: [
                                             Text(
                                               info["title"] ?? "",
-                                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                             const SizedBox(height: 4),
                                             Row(
                                               children: [
-                                                const Icon(Icons.place, size: 16, color: Colors.grey),
+                                                const Icon(
+                                                  Icons.place,
+                                                  size: 16,
+                                                  color: Colors.grey,
+                                                ),
                                                 const SizedBox(width: 4),
-                                                Text(info["location"] ?? "-", style: const TextStyle(color: Colors.grey)),
+                                                Text(
+                                                  info["location"] ?? "-",
+                                                  style: const TextStyle(color: Colors.grey),
+                                                ),
                                               ],
                                             ),
                                             const SizedBox(height: 8),
@@ -266,14 +359,27 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
                                                 if (canManage)
                                                   TextButton.icon(
                                                     onPressed: () => _openEditDialog(info),
-                                                    icon: const Icon(Icons.edit, color: Colors.blue),
-                                                    label: const Text("Edit", style: TextStyle(color: Colors.blue)),
+                                                    icon: const Icon(
+                                                      Icons.edit,
+                                                      color: Colors.blue,
+                                                    ),
+                                                    label: const Text(
+                                                      "Edit",
+                                                      style: TextStyle(color: Colors.blue),
+                                                    ),
                                                   ),
                                                 if (canManage)
                                                   TextButton.icon(
-                                                    onPressed: () => _confirmDelete(info["id"]),
-                                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                                    label: const Text("Hapus", style: TextStyle(color: Colors.red)),
+                                                    onPressed: () =>
+                                                        _confirmDelete(info["id"]),
+                                                    icon: const Icon(
+                                                      Icons.delete,
+                                                      color: Colors.red,
+                                                    ),
+                                                    label: const Text(
+                                                      "Hapus",
+                                                      style: TextStyle(color: Colors.red),
+                                                    ),
                                                   ),
                                               ],
                                             ),
@@ -303,7 +409,10 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
         title: const Text("Hapus Informasi"),
         content: const Text("Yakin ingin menghapus informasi ini?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {

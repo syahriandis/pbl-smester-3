@@ -27,8 +27,21 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-   public function families()
+    // Relasi keluarga
+    public function families()
     {
         return $this->hasMany(\App\Models\Family::class, 'user_id');
+    }
+
+    // ✅ Informasi yang sudah dibaca user
+    // Informasi yang sudah dibaca user
+    public function readInformasis()
+    {
+        return $this->belongsToMany(
+            \App\Models\Informasi::class,
+            'informasi_reads',
+            'user_id',
+            'informasi_id'
+        )->withPivot('read_at')->withTimestamps();
     }
 }

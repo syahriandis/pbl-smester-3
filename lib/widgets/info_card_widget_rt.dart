@@ -17,8 +17,23 @@ class InfoCardWidgetRT extends StatelessWidget {
     required this.onDelete,
   });
 
+  String _getFullImageUrl(String path) {
+    if (path.isEmpty) return '';
+    
+    // Jika sudah full URL (http/https)
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    
+    // Jika path dari database (storage/informasi/...)
+    // Tambahkan base URL backend
+    return 'http://localhost:8000/$path';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final fullImageUrl = _getFullImageUrl(imagePath);
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
@@ -36,18 +51,48 @@ class InfoCardWidgetRT extends StatelessWidget {
         contentPadding: const EdgeInsets.all(12),
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: imagePath.isNotEmpty && imagePath.startsWith('http')
+          child: fullImageUrl.isNotEmpty
               ? Image.network(
-                  imagePath,
+                  fullImageUrl,
                   width: 60,
                   height: 60,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Jika gagal load, tampilkan icon placeholder
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey.shade300,
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        color: Colors.grey,
+                      ),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey.shade200,
+                      child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  },
                 )
-              : Image.asset(
-                  imagePath.isNotEmpty ? imagePath : "assets/images/default.jpg",
+              : Container(
                   width: 60,
                   height: 60,
-                  fit: BoxFit.cover,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.image,
+                    color: Colors.grey,
+                    size: 30,
+                  ),
                 ),
         ),
         title: Text(
