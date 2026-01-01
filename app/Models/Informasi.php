@@ -20,9 +20,20 @@ class Informasi extends Model
         'image',
     ];
 
-    // Relasi ke user (RT/RW yang buat informasi)
+    // RT/RW pembuat informasi
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // User yang sudah membaca
+    public function readers()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'informasi_reads',
+            'informasi_id',
+            'user_id'
+        )->withPivot('read_at')->withTimestamps();
     }
 }
