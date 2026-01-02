@@ -11,7 +11,7 @@ import 'package:login_tes/widgets/main_layout_rt.dart';
 
 // Dialogs
 import 'package:login_tes/widgets/ganti_password_dialog.dart';
-
+import 'package:login_tes/widgets/edit_profile_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
   final String token;
@@ -61,6 +61,19 @@ class _ProfilePageState extends State<ProfilePage> {
       default:
         return "Profil Warga";
     }
+  }
+
+  // Helper untuk get foto URL
+  String _getPhotoUrl(String? photo) {
+    if (photo == null || photo.isEmpty) {
+      return 'assets/images/avatar.jpg'; // Default avatar
+    }
+    // Jika sudah full URL
+    if (photo.startsWith('http')) {
+      return photo;
+    }
+    // Jika relative path dari storage
+    return 'http://127.0.0.1:8000/storage/$photo';
   }
 
   @override
@@ -132,9 +145,11 @@ class _ProfilePageState extends State<ProfilePage> {
           final data = snapshot.data!;
           final role = data["role"];
           final name = data["name"];
+          final nik = data["nik"];
           final gender = data["gender"];
           final phone = data["phone"];
           final address = data["address"];
+          final photo = data["photo"];
           final families = (data["families"] ?? []) as List<dynamic>;
 
           return SafeArea(
@@ -159,10 +174,23 @@ class _ProfilePageState extends State<ProfilePage> {
                         radius: 22,
                         backgroundColor: whiteColor,
                         child: ClipOval(
-                          child: Image.asset(
-                            'assets/images/avatar.jpg',
-                            fit: BoxFit.cover,
-                          ),
+                          child: photo != null && photo.toString().isNotEmpty
+                              ? Image.network(
+                                  _getPhotoUrl(photo.toString()),
+                                  fit: BoxFit.cover,
+                                  width: 44,
+                                  height: 44,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      'assets/images/avatar.jpg',
+                                      fit: BoxFit.cover,
+                                    );
+                                  },
+                                )
+                              : Image.asset(
+                                  'assets/images/avatar.jpg',
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                       ),
                     ],
@@ -181,14 +209,44 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ROLE TITLE
-                          Text(
-                            _getRoleTitle(role ?? ""),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: primaryColor,
-                            ),
+                          // ROLE TITLE WITH EDIT BUTTON
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _getRoleTitle(role ?? ""),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor,
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: () async {
+                                  final updated = await showDialog(
+                                    context: context,
+                                    builder: (context) => EditProfileDialog(
+                                      token: widget.token,
+                                      currentData: data,
+                                    ),
+                                  );
+                                  if (updated == true) {
+                                    setState(() {
+                                      _profileFuture = _fetchProfile();
+                                    });
+                                  }
+                                },
+                                icon: const Icon(Icons.edit, size: 18),
+                                label: const Text("Edit"),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: primaryColor,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 12),
 
@@ -200,30 +258,87 @@ class _ProfilePageState extends State<ProfilePage> {
                               border: Border.all(color: Colors.grey.shade300),
                             ),
                             child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(50),
-                                  child: Image.asset(
-                                    'assets/images/avatar.jpg',
-                                    height: 60,
-                                    width: 60,
-                                    fit: BoxFit.cover,
-                                  ),
+                                  child: photo != null && photo.toString().isNotEmpty
+                                      ? Image.network(
+                                          _getPhotoUrl(photo.toString()),
+                                          height: 60,
+                                          width: 60,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Image.asset(
+                                              'assets/images/avatar.jpg',
+                                              height: 60,
+                                              width: 60,
+                                              fit: BoxFit.cover,
+                                            );
+                                          },
+                                        )
+                                      : Image.asset(
+                                          'assets/images/avatar.jpg',
+                                          height: 60,
+                                          width: 60,
+                                          fit: BoxFit.cover,
+                                        ),
                                 ),
                                 const SizedBox(width: 16),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      (name ?? 'Nama tidak tersedia').toString(),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        (name ?? 'Nama tidak tersedia').toString(),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
                                       ),
-                                    ),
-                                    Text((gender ?? 'Jenis kelamin tidak tersedia').toString()),
-                                    Text((phone ?? 'Nomor tidak tersedia').toString()),
-                                  ],
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.badge, size: 14, color: greyColor),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              'NIK: ${(nik ?? 'NIK tidak tersedia').toString()}',
+                                              style: const TextStyle(fontSize: 13),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            gender == 'LAKI-LAKI' 
+                                                ? Icons.male 
+                                                : Icons.female,
+                                            size: 14,
+                                            color: greyColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            (gender ?? 'Jenis kelamin tidak tersedia').toString(),
+                                            style: const TextStyle(fontSize: 13),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.phone, size: 14, color: greyColor),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            (phone ?? 'Nomor tidak tersedia').toString(),
+                                            style: const TextStyle(fontSize: 13),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -248,7 +363,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                   onPressed: () async {
                                     final updated = await Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (_) => const EditKeluargaPage()),
+                                      MaterialPageRoute(
+                                        builder: (_) => const EditKeluargaPage(),
+                                      ),
                                     );
                                     if (updated == true) {
                                       setState(() {
@@ -284,19 +401,32 @@ class _ProfilePageState extends State<ProfilePage> {
                                   "Anggota keluarga",
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 8),
                                 if (families.isEmpty)
-                                  const Text("Belum ada anggota keluarga"),
-                                for (var f in families)
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text((f["nama"] ?? 'Nama anggota').toString()),
-                                      Text((f["hubungan"] ?? 'Hubungan tidak tersedia').toString()),
-                                    ],
-                                  ),
+                                  const Text("Belum ada anggota keluarga")
+                                else
+                                  ...families.map((f) => Padding(
+                                        padding: const EdgeInsets.only(bottom: 4),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text((f["nama"] ?? 'Nama anggota').toString()),
+                                            Text(
+                                              (f["hubungan"] ?? 'Hubungan tidak tersedia').toString(),
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                color: greyColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )),
                                 const SizedBox(height: 12),
-                                const Text("Alamat", style: TextStyle(fontWeight: FontWeight.bold)),
+                                const Text(
+                                  "Alamat",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
                                 Text((address ?? 'Alamat belum tersedia').toString()),
                               ],
                             ),
@@ -332,7 +462,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               },
                               child: const Text(
                                 "Edit",
-                               
                                 style: TextStyle(color: whiteColor),
                               ),
                             ),

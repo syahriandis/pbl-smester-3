@@ -18,6 +18,9 @@ use App\Http\Controllers\SuratFileController;
 // =========================
 // PUBLIC ROUTES (TANPA TOKEN)
 // =========================
+Route::options('{any}', function () {
+    return response()->json([], 200);
+})->where('any', '.*');
 
 // Login
 Route::post('/login', [LoginController::class, 'login']);
@@ -70,13 +73,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/informasi/{id}', [InformasiController::class, 'update']);
     Route::delete('/informasi/{id}', [InformasiController::class, 'destroy']);
     Route::post('/informasi/{id}/read', [InformasiController::class, 'markAsRead']);
+
     // ======== PROFILE ========
     Route::get('/profile', [ProfileController::class, 'profile']);
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
-    Route::put('/profile', [ProfileController::class, 'update']);
-
+    Route::post('/profile/update', [ProfileController::class, 'update']); 
+    Route::post('/profile/password/update', [ProfileController::class, 'updatePassword']); 
+    Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto']); 
+    
     // ======== FAMILY ========
     Route::post('/family', [FamilyController::class, 'store']);
+    Route::post('/profile/family/update', [ProfileController::class, 'updateFamily']); 
     Route::delete('/family/{id}', [FamilyController::class, 'destroy']);
 
     // ======== USER INFO ========

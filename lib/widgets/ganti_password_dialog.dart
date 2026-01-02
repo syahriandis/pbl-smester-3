@@ -136,7 +136,7 @@ class _EditPasswordDialogState extends State<EditPasswordDialog> {
                 ),
               ),
               const SizedBox(height: 12),
-
+              
               // PASSWORD BARU
               TextField(
                 controller: newPassController,
@@ -173,8 +173,8 @@ class _EditPasswordDialogState extends State<EditPasswordDialog> {
                   ),
                 ),
               ),
+              
               const SizedBox(height: 20),
-
               // TOMBOL KONFIRMASI
               SizedBox(
                 width: double.infinity,
