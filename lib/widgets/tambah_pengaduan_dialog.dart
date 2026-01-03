@@ -43,7 +43,7 @@ class _TambahPengaduanDialogState extends State<TambahPengaduanDialog> {
     try {
       final uri = Uri.parse(kIsWeb
           ? "http://localhost:8000/api/pengaduan"
-          : "http://127.0.0.1:8000/api/pengaduan");
+          : "http://localhost:8000/api/pengaduan");
 
       final request = http.MultipartRequest("POST", uri)
         ..headers['Authorization'] = "Bearer ${widget.token}"

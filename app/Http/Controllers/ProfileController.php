@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Models\User;
+use Illuminate\Support\Facades\Log; 
 
 class ProfileController extends Controller
 {
@@ -15,6 +16,13 @@ class ProfileController extends Controller
      */
     public function profile(Request $request)
     {
+         $user = $request->user()->load('families');
+
+        // ✅ Debug
+        Log::info('=== PROFILE DEBUG ===');
+        Log::info('Photo value: ' . $user->photo);
+        Log::info('Full path: ' . storage_path('app/public/' . $user->photo));
+        Log::info('File exists: ' . (file_exists(storage_path('app/public/' . $user->photo)) ? 'YES' : 'NO'));
         $user = $request->user()->load('families');
 
         return response()->json([
@@ -184,4 +192,5 @@ class ProfileController extends Controller
             'message' => 'Foto profil tidak ditemukan'
         ], 404);
     }
+    
 }

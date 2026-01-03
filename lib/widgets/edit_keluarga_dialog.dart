@@ -49,7 +49,7 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
       }
 
       final res = await http.get(
-        Uri.parse("http://127.0.0.1:8000/api/profile"),
+        Uri.parse("http://localhost:8000/api/profile"),
         headers: {"Authorization": "Bearer $token"},
       );
 
@@ -94,7 +94,7 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
       }
 
       final res = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/family"),
+        Uri.parse("http://localhost:8000/api/family"),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -177,7 +177,7 @@ class _EditKeluargaPageState extends State<EditKeluargaPage> {
       }
 
       final res = await http.delete(
-        Uri.parse("http://127.0.0.1:8000/api/family/$id"),
+        Uri.parse("http://localhost:8000/api/family/$id"),
         headers: {"Authorization": "Bearer $token"},
       );
 

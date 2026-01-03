@@ -85,16 +85,13 @@ class _DetailPengaduanDialogState extends State<DetailPengaduanDialog> {
             if (p['image'] != null && p['image'].toString().isNotEmpty)
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: MouseRegion(
-                  onExit: (_) {}, // clear pointer supaya tidak crash
-                  child: Image.network(
-                    "http://localhost:8000/${p['image']}",
-                    height: 160,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Text("Gambar tidak tersedia"),
-                  ),
+                child: Image.network(
+                  "http://localhost:8000/${p['image']}",
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Text("Gambar tidak tersedia"),
                 ),
               ),
             const SizedBox(height: 12),

@@ -12,7 +12,7 @@ class PreviewSuratPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final url = "http://127.0.0.1:8000/storage/surat_jadi/$fileSurat";
+    final url = "http://localhost:8000/storage/surat_jadi/$fileSurat";
 
     final isPDF = fileSurat.toLowerCase().endsWith(".pdf");
 

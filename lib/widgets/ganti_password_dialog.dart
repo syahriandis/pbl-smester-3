@@ -54,7 +54,7 @@ class _EditPasswordDialogState extends State<EditPasswordDialog> {
 
     try {
       final response = await http.put(
-        Uri.parse("http://127.0.0.1:8000/api/profile/password"),
+        Uri.parse("http://localhost:8000/api/profile/password"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",

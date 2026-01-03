@@ -37,16 +37,23 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<Map<String, dynamic>> _fetchProfile() async {
-    final res = await http.get(
-      Uri.parse("http://127.0.0.1:8000/api/profile"),
-      headers: {"Authorization": "Bearer ${widget.token}"},
-    );
+    try {
+      final res = await http.get(
+        Uri.parse("http://localhost:8000/api/profile"),
+        headers: {"Authorization": "Bearer ${widget.token}"},
+      );
 
-    if (res.statusCode == 200) {
-      final Map<String, dynamic> json = jsonDecode(res.body);
-      return json["data"];
-    } else {
-      throw Exception("Gagal memuat profil (${res.statusCode})");
+      debugPrint("Fetch profile status: ${res.statusCode}");
+
+      if (res.statusCode == 200) {
+        final Map<String, dynamic> json = jsonDecode(res.body);
+        return json["data"];
+      } else {
+        throw Exception("Gagal memuat profil (${res.statusCode})");
+      }
+    } catch (e) {
+      debugPrint("Error fetch profile: $e");
+      rethrow;
     }
   }
 
@@ -63,22 +70,22 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // Helper untuk get foto URL
+    // Helper untuk get foto URL
   String _getPhotoUrl(String? photo) {
     if (photo == null || photo.isEmpty) {
-      return 'assets/images/avatar.jpg'; // Default avatar
+      return 'assets/images/avatar.jpg';
     }
-    // Jika sudah full URL
     if (photo.startsWith('http')) {
       return photo;
     }
-    // Jika relative path dari storage
-    return 'http://127.0.0.1:8000/storage/$photo';
+    
+    final url = 'http://localhost:8000/api/storage/$photo';
+    debugPrint('🖼️ Photo URL: $url'); // ✅ Add this
+    return url;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Pilih layout sesuai role
     Widget layout;
 
     if (widget.role == "security") {
@@ -114,32 +121,51 @@ class _ProfilePageState extends State<ProfilePage> {
         future: _profileFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: primaryColor),
+                  SizedBox(height: 16),
+                  Text("Memuat profil..."),
+                ],
+              ),
+            );
           }
           if (snapshot.hasError) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
                   Text(
                     "Terjadi kesalahan: ${snapshot.error}",
                     style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
                     onPressed: () {
                       setState(() {
                         _profileFuture = _fetchProfile();
                       });
                     },
-                    child: const Text("Coba Lagi"),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text("Coba Lagi"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: whiteColor,
+                    ),
                   ),
                 ],
               ),
             );
           }
           if (!snapshot.hasData) {
-            return const Center(child: Text("Data profil tidak tersedia"));
+            return const Center(
+              child: Text("Data profil tidak tersedia"),
+            );
           }
 
           final data = snapshot.data!;
@@ -180,7 +206,17 @@ class _ProfilePageState extends State<ProfilePage> {
                                   fit: BoxFit.cover,
                                   width: 44,
                                   height: 44,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return const Center(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: primaryColor,
+                                      ),
+                                    );
+                                  },
                                   errorBuilder: (context, error, stackTrace) {
+                                    debugPrint("Error loading header photo: $error");
                                     return Image.asset(
                                       'assets/images/avatar.jpg',
                                       fit: BoxFit.cover,
@@ -268,7 +304,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                           height: 60,
                                           width: 60,
                                           fit: BoxFit.cover,
+                                          loadingBuilder: (context, child, loadingProgress) {
+                                            if (loadingProgress == null) return child;
+                                            return Container(
+                                              height: 60,
+                                              width: 60,
+                                              color: Colors.grey.shade200,
+                                              child: const Center(
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  color: primaryColor,
+                                                ),
+                                              ),
+                                            );
+                                          },
                                           errorBuilder: (context, error, stackTrace) {
+                                            debugPrint("Error loading profile photo: $error");
                                             return Image.asset(
                                               'assets/images/avatar.jpg',
                                               height: 60,
@@ -358,29 +409,29 @@ class _ProfilePageState extends State<ProfilePage> {
                                   color: primaryColor,
                                 ),
                               ),
-                              if (widget.role == "warga")
-                                TextButton(
-                                  onPressed: () async {
-                                    final updated = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const EditKeluargaPage(),
-                                      ),
-                                    );
-                                    if (updated == true) {
-                                      setState(() {
-                                        _profileFuture = _fetchProfile();
-                                      });
-                                    }
-                                  },
-                                  child: const Text(
-                                    "Edit",
-                                    style: TextStyle(
-                                      color: primaryColor,
-                                      fontWeight: FontWeight.bold,
+                              // Semua role bisa edit keluarga
+                              TextButton(
+                                onPressed: () async {
+                                  final updated = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const EditKeluargaPage(),
                                     ),
+                                  );
+                                  if (updated == true) {
+                                    setState(() {
+                                      _profileFuture = _fetchProfile();
+                                    });
+                                  }
+                                },
+                                child: const Text(
+                                  "Edit",
+                                  style: TextStyle(
+                                    color: primaryColor,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                              ),
                             ],
                           ),
 
@@ -453,6 +504,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
                               ),
                               onPressed: () {
                                 showDialog(
@@ -461,8 +513,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                 );
                               },
                               child: const Text(
-                                "Edit",
-                                style: TextStyle(color: whiteColor),
+                                "Edit Password",
+                                style: TextStyle(
+                                  color: whiteColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),

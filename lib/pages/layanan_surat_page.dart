@@ -34,7 +34,7 @@ class _LayananSuratPageState extends State<LayananSuratPage> {
 
   Future<void> _fetchSuratList() async {
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:8000/api/warga/surat'),
+      Uri.parse('http://localhost:8000/api/warga/surat'),
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer ${widget.token}',
@@ -65,19 +65,20 @@ class _LayananSuratPageState extends State<LayananSuratPage> {
   }
 
   void _downloadSurat(String fileName) async {
-    final encoded = Uri.encodeComponent(fileName);
-    final url = "http://127.0.0.1:8000/surat/download/$encoded";
-    final uri = Uri.parse(url);
+  final encoded = Uri.encodeComponent(fileName);
+  // ✅ Pakai storage route aja, konsisten
+  final url = "http://localhost:8000/api/storage/surat_jadi/$encoded";
+  final uri = Uri.parse(url);
 
-    if (!await canLaunchUrl(uri)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Gagal membuka file surat")),
-      );
-      return;
-    }
-
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  if (!await canLaunchUrl(uri)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Gagal membuka file surat")),
+    );
+    return;
   }
+
+  await launchUrl(uri, mode: LaunchMode.externalApplication);
+}
 
   void _showTambahSuratDialog() {
     showDialog(

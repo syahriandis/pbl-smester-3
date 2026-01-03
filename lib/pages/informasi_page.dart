@@ -45,7 +45,7 @@ class _InformasiPageState extends State<InformasiPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/informasi'),
+        Uri.parse('http://localhost:8000/api/informasi'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
           'Accept': 'application/json',
@@ -83,7 +83,7 @@ class _InformasiPageState extends State<InformasiPage> {
   Future<void> _markAsRead(int id) async {
     try {
       await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/informasi/$id/read'),
+        Uri.parse('http:localhost:8000/api/informasi/$id/read'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
           'Accept': 'application/json',

@@ -33,7 +33,7 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
 
   Future<void> _fetchDetail() async {
     final res = await http.get(
-      Uri.parse("http://127.0.0.1:8000/api/rt/surat/${widget.idPengajuan}"),
+      Uri.parse("http://localhost:8000/api/rt/surat/${widget.idPengajuan}"),
       headers: {
         "Authorization": "Bearer ${widget.token}",
         "Accept": "application/json",
@@ -59,7 +59,7 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
   // ✅ UPDATE STATUS
   Future<void> _updateStatus(String status, {String? catatan}) async {
     final res = await http.put(
-      Uri.parse("http://127.0.0.1:8000/api/rt/surat/${widget.idPengajuan}"),
+      Uri.parse("http://localhost:8000/api/rt/surat/${widget.idPengajuan}"),
       headers: {
         "Authorization": "Bearer ${widget.token}",
         "Content-Type": "application/json",
@@ -100,7 +100,7 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
 
     var request = http.MultipartRequest(
       "POST",
-      Uri.parse("http://127.0.0.1:8000/api/rt/surat/${widget.idPengajuan}/upload"),
+      Uri.parse("http://localhost:8000/api/rt/surat/${widget.idPengajuan}/upload"),
     );
 
     request.headers["Authorization"] = "Bearer ${widget.token}";
@@ -161,7 +161,7 @@ class _DetailSuratRTPageState extends State<DetailSuratRTPage> {
 
     Widget _previewFile(String fileName) {
     final encoded = Uri.encodeComponent(fileName);
-    final url = "http://127.0.0.1:8000/storage/surat_jadi/$encoded";
+    final url = "http://localhost:8000/storage/surat_jadi/$encoded";
 
     final isImage = fileName.endsWith(".jpg") ||
         fileName.endsWith(".jpeg") ||

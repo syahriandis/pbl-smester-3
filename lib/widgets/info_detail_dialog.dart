@@ -29,7 +29,7 @@ class InfoDetailDialog extends StatelessWidget {
     }
     
     // ✅ Pakai endpoint API storage
-    return 'http://127.0.0.1:8000/api/storage/$imagePath';
+    return 'http://localhost:8000/api/storage/$imagePath';
   }
 
   @override

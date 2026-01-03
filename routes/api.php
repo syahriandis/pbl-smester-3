@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Log;
 
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProfileController;
@@ -16,91 +17,113 @@ use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\SuratFileController;
 
 // =========================
-// PUBLIC ROUTES (TANPA TOKEN)
+// PUBLIC ROUTES
 // =========================
-Route::options('{any}', function () {
-    return response()->json([], 200);
-})->where('any', '.*');
 
 // Login
 Route::post('/login', [LoginController::class, 'login']);
 
-// Jenis Surat (public)
+// Jenis Surat
 Route::get('/jenis-surat', [JenisSuratController::class, 'index']);
 
-// ✅ Storage untuk image informasi (PUBLIC - CORS handled)
-Route::get('/storage/{path}', function ($path) {
-    $file = Storage::disk('public')->path($path);
+// ✅ SURAT PREVIEW & DOWNLOAD - TARUH DI ATAS STORAGE ROUTE!
+Route::get('/surat/preview/{filename}', function ($filename) {
+    $filePath = storage_path('app/public/surat_jadi/' . $filename);
     
-    if (!file_exists($file)) {
-        abort(404);
+    if (!file_exists($filePath)) {
+        Log::error('Surat not found: ' . $filePath);
+        abort(404, 'File not found');
     }
 
-    return Response::file($file, [
-        'Content-Type' => mime_content_type($file),
+    return response()->file($filePath, [
+        'Content-Type' => mime_content_type($filePath),
+        'Access-Control-Allow-Origin' => '*',
+        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+    ]);
+});
+
+Route::get('/surat/download/{filename}', function ($filename) {
+    $filePath = storage_path('app/public/surat_jadi/' . $filename);
+    
+    if (!file_exists($filePath)) {
+        Log::error('Surat not found for download: ' . $filePath);
+        abort(404, 'File not found');
+    }
+
+    return response()->download($filePath, $filename, [
+        'Content-Type' => mime_content_type($filePath),
+        'Access-Control-Allow-Origin' => '*',
+    ]);
+});
+
+// ✅ STORAGE - GENERAL PURPOSE
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+    
+    if (!file_exists($filePath)) {
+        Log::error('File not found: ' . $filePath);
+        abort(404, 'File not found');
+    }
+
+    $mimeType = mime_content_type($filePath);
+    
+    return response()->file($filePath, [
+        'Content-Type' => $mimeType,
         'Access-Control-Allow-Origin' => '*',
         'Access-Control-Allow-Methods' => 'GET, OPTIONS',
         'Access-Control-Allow-Headers' => '*',
+        'Cache-Control' => 'public, max-age=3600',
     ]);
 })->where('path', '.*');
 
-// ✅ Surat Preview & Download (PUBLIC - biar warga bisa akses tanpa login)
-Route::get('/surat/preview/{filename}', [SuratFileController::class, 'preview']);
-Route::get('/surat/download/{filename}', [SuratFileController::class, 'download']);
-
 // =========================
-// PROTECTED ROUTES (BUTUH TOKEN)
+// PROTECTED ROUTES
 // =========================
 Route::middleware('auth:sanctum')->group(function () {
 
-    // ======== JENIS SURAT (RT) ========
+    // JENIS SURAT
     Route::post('/jenis-surat', [JenisSuratController::class, 'store']);
     Route::delete('/jenis-surat/{id}', [JenisSuratController::class, 'destroy']);
 
-    // ======== SURAT WARGA ========
+    // SURAT WARGA
     Route::get('/warga/surat', [SuratPengajuanController::class, 'indexWarga']);
     Route::post('/warga/surat', [SuratPengajuanController::class, 'store']);
 
-    // ======== SURAT RT ========
+    // SURAT RT
     Route::get('/rt/surat', [SuratRTController::class, 'index']);
     Route::get('/rt/surat/{id}', [SuratRTController::class, 'show']);
     Route::put('/rt/surat/{id}', [SuratRTController::class, 'update']);
     Route::post('/rt/surat/{id}/upload', [SuratRTController::class, 'uploadSurat']);
 
-    // ======== INFORMASI ========
+    // INFORMASI
     Route::get('/informasi', [InformasiController::class, 'index']);
     Route::post('/informasi', [InformasiController::class, 'store']);
     Route::put('/informasi/{id}', [InformasiController::class, 'update']);
     Route::delete('/informasi/{id}', [InformasiController::class, 'destroy']);
     Route::post('/informasi/{id}/read', [InformasiController::class, 'markAsRead']);
 
-    // ======== PROFILE ========
+    // PROFILE
     Route::get('/profile', [ProfileController::class, 'profile']);
-    Route::post('/profile/update', [ProfileController::class, 'update']); 
-    Route::post('/profile/password/update', [ProfileController::class, 'updatePassword']); 
-    Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto']); 
+    Route::post('/profile/update', [ProfileController::class, 'update']);
+    Route::post('/profile/password/update', [ProfileController::class, 'updatePassword']);
+    Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto']);
     
-    // ======== FAMILY ========
+    // FAMILY
     Route::post('/family', [FamilyController::class, 'store']);
-    Route::post('/profile/family/update', [ProfileController::class, 'updateFamily']); 
+    Route::put('/family/{id}', [FamilyController::class, 'update']);
     Route::delete('/family/{id}', [FamilyController::class, 'destroy']);
 
-    // ======== USER INFO ========
+    // USER INFO
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
-    // ======== PENGADUAN ========
-    // Warga
+    // PENGADUAN
     Route::post('/pengaduan', [PengaduanController::class, 'store']);
     Route::get('/pengaduan', [PengaduanController::class, 'indexWarga']);
-
-    // RT
     Route::get('/rt/pengaduan', [PengaduanController::class, 'indexRT']);
     Route::put('/rt/pengaduan/{id}/approve', [PengaduanController::class, 'approve']);
     Route::put('/rt/pengaduan/{id}/reject', [PengaduanController::class, 'reject']);
-
-    // Security
     Route::get('/security/pengaduan', [PengaduanController::class, 'indexSecurity']);
     Route::put('/security/pengaduan/{id}/feedback', [PengaduanController::class, 'feedback']);
     Route::put('/security/pengaduan/{id}/done', [PengaduanController::class, 'done']);

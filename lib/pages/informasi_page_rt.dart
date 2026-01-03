@@ -37,7 +37,7 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
     setState(() => _isLoading = true);
     try {
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/informasi'),
+        Uri.parse('http://localhost:8000/api/informasi'),
         headers: {'Authorization': 'Bearer ${widget.tokenRT}'},
       );
 
@@ -63,7 +63,7 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
   Future<void> _deleteInformasi(int id) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/api/informasi/$id'),
+        Uri.parse('http://localhost:8000/api/informasi/$id'),
         headers: {'Authorization': 'Bearer ${widget.tokenRT}'},
       );
 
@@ -125,7 +125,7 @@ class _InformasiPageRTState extends State<InformasiPageRT> {
     }
     
     // ✅ Pakai endpoint API storage
-    return 'http://127.0.0.1:8000/api/storage/$imagePath';
+    return 'http://localhost:8000/api/storage/$imagePath';
   }
 
   @override

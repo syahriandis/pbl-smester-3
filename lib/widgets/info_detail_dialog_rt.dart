@@ -40,7 +40,7 @@ Future<bool?> showInfoDetailDialogRT({
             }
             
             // ✅ Pakai endpoint API
-            return 'http://127.0.0.1:8000/api/storage/$imagePath';
+            return 'http://localhost:8000/api/storage/$imagePath';
           }
 
           final imageUrl = _getImageUrl(info["image"]);
@@ -340,7 +340,7 @@ Future<bool?> showInfoDetailDialogRT({
                         setState(() => isSubmitting = true);
                         
                         try {
-                          final uri = Uri.parse("http://127.0.0.1:8000/api/informasi/${info["id"]}");
+                          final uri = Uri.parse("http://localhost:8000/api/informasi/${info["id"]}");
                           final request = http.MultipartRequest("POST", uri)
                             ..headers['Authorization'] = "Bearer $token"
                             ..headers['Accept'] = "application/json"

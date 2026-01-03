@@ -7,7 +7,7 @@ Future<List<Map<String, dynamic>>> fetchInformasi() async {
   final token = prefs.getString('token');
 
   final response = await http.get(
-    Uri.parse('http://127.0.0.1:8000/api/informasi'),
+    Uri.parse('http://localhost:8000/api/informasi'),
     headers: {
       'Authorization': 'Bearer $token',
     },

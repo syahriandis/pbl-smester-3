@@ -28,7 +28,7 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
 
   Future<void> _fetchJenisSurat() async {
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:8000/api/jenis-surat'),
+      Uri.parse('http://localhost:8000/api/jenis-surat'),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -65,7 +65,7 @@ class _TambahSuratDialogState extends State<TambahSuratDialog> {
     setState(() => isSubmitting = true);
 
     final res = await http.post(
-      Uri.parse("http://127.0.0.1:8000/api/warga/surat"),
+      Uri.parse("http://localhost:8000/api/warga/surat"),
       headers: {
         "Authorization": "Bearer ${widget.token}",
         "Content-Type": "application/json",

@@ -35,7 +35,7 @@ class _LayananSuratPageRTState extends State<LayananSuratPageRT> {
 
     try {
       final response = await http.get(
-        Uri.parse("http://127.0.0.1:8000/api/rt/surat"),
+        Uri.parse("http://localhost:8000/api/rt/surat"),
         headers: {
           "Authorization": "Bearer ${widget.tokenRT}",
           "Accept": "application/json",
@@ -83,7 +83,7 @@ class _LayananSuratPageRTState extends State<LayananSuratPageRT> {
     final surat = _suratList[index];
 
     final response = await http.put(
-      Uri.parse("http://127.0.0.1:8000/api/rt/surat/${surat['id_pengajuan']}"),
+      Uri.parse("http://localhost:8000/api/rt/surat/${surat['id_pengajuan']}"),
       headers: {
         "Authorization": "Bearer ${widget.tokenRT}",
         "Content-Type": "application/json",

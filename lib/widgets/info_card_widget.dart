@@ -26,7 +26,7 @@ class InfoCardWidget extends StatelessWidget {
       return imagePath;
     }
     
-    return 'http://127.0.0.1:8000/api/storage/$imagePath';
+    return 'http://localhost:8000/api/storage/$imagePath';
   }
 
   bool _isNew() {
