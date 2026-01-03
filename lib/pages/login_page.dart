@@ -6,7 +6,7 @@ import 'package:login_tes/constants/colors.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:login_tes/widgets/main_layout_rt.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
