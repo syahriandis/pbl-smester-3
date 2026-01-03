@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/pages/dashboard_security_page.dart';
-import 'package:login_tes/pages/riwayat_security_page.dart';
+import 'package:login_tes/pages/riwayat_page.dart';
 import 'package:login_tes/pages/informasi_page.dart';
 import 'package:login_tes/pages/profile_page.dart';
 
@@ -39,7 +39,7 @@ class _MainLayoutSecurityState extends State<MainLayoutSecurity> {
         break;
 
       case 1:
-        page = RiwayatsecurityPage(
+        page = RiwayatPage(
           token: widget.token,
           role: widget.role,
         );

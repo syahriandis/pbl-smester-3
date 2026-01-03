@@ -4,7 +4,7 @@ import 'package:login_tes/constants/colors.dart';
 
 // Pages
 import 'package:login_tes/pages/dashboard_page_rt.dart';
-import 'package:login_tes/pages/riwayat_page_rt.dart';
+import 'package:login_tes/pages/riwayat_page.dart';
 import 'package:login_tes/pages/informasi_page_rt.dart';
 import 'package:login_tes/pages/profile_page.dart';
 
@@ -37,9 +37,12 @@ class _MainLayoutRTState extends State<MainLayoutRT> {
         page = DashboardPageRT(tokenRT: widget.tokenRT, role: widget.role,);
         break;
 
-      case 1:
-        page = RiwayatPageRT(tokenRT: widget.tokenRT, role: widget.role);
-        break;
+     case 1:
+      page = RiwayatPage(
+        token: widget.tokenRT,
+        role: widget.role,
+      );
+      break;
 
       case 2:
         page = InformasiPageRT(tokenRT: widget.tokenRT, role: widget.role);

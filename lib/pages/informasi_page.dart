@@ -82,27 +82,42 @@ class _InformasiPageState extends State<InformasiPage> {
   // =============================
   Future<void> _markAsRead(int id) async {
     try {
-      await http.post(
-        Uri.parse('http:localhost:8000/api/informasi/$id/read'),
+      final response = await http.post(
+        Uri.parse('http://localhost:8000/api/informasi/$id/read'), // FIXED: Tambah //
         headers: {
           'Authorization': 'Bearer ${widget.token}',
           'Accept': 'application/json',
         },
       );
-    } catch (_) {}
+      
+      // Optional: Log response untuk debugging
+      if (response.statusCode != 200) {
+        print('Mark as read failed: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
+    } catch (e) {
+      print('Error marking as read: $e');
+    }
   }
 
   void _openDetail(Map<String, dynamic> info) async {
-    if (info['is_read'] == 0) {
-      await _markAsRead(info['id']);
-
+    // Simpan status read sebelumnya
+    final wasUnread = info['is_read'] == 0;
+    
+    if (wasUnread) {
+      // Update UI dulu untuk respons cepat
       setState(() {
         info['is_read'] = 1;
-        _unreadCount--;
+        _unreadCount = (_unreadCount - 1).clamp(0, _listInformasi.length);
       });
+      
+      // Kirim request ke backend
+      await _markAsRead(info['id']);
     }
 
-    showInfoDetailDialog(context, info);
+    if (mounted) {
+      showInfoDetailDialog(context, info);
+    }
   }
 
   // =============================

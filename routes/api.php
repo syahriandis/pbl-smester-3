@@ -14,7 +14,9 @@ use App\Http\Controllers\JenisSuratController;
 use App\Http\Controllers\SuratPengajuanController;
 use App\Http\Controllers\SuratRTController;
 use App\Http\Controllers\PengaduanController;
-use App\Http\Controllers\SuratFileController;
+use App\Http\Controllers\Api\PembayaranController;
+// Routes untuk semua role yang terautentikasi (warga, rt, rw, security)
+    
 
 // =========================
 // PUBLIC ROUTES
@@ -25,7 +27,21 @@ Route::post('/login', [LoginController::class, 'login']);
 
 // Jenis Surat
 Route::get('/jenis-surat', [JenisSuratController::class, 'index']);
+// ✅ PENGADUAN IMAGES - Pastikan ada dan SEBELUM route storage general
+Route::get('/pengaduan/{filename}', function ($filename) {
+    $filePath = storage_path('app/public/pengaduan/' . $filename);
+    
+    if (!file_exists($filePath)) {
+        Log::error('Pengaduan image not found: ' . $filePath);
+        abort(404, 'Image not found');
+    }
 
+    return response()->file($filePath, [
+        'Content-Type' => mime_content_type($filePath),
+        'Access-Control-Allow-Origin' => '*',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+});
 // ✅ SURAT PREVIEW & DOWNLOAD - TARUH DI ATAS STORAGE ROUTE!
 Route::get('/surat/preview/{filename}', function ($filename) {
     $filePath = storage_path('app/public/surat_jadi/' . $filename);
@@ -75,12 +91,17 @@ Route::get('/storage/{path}', function ($path) {
         'Cache-Control' => 'public, max-age=3600',
     ]);
 })->where('path', '.*');
-
 // =========================
 // PROTECTED ROUTES
 // =========================
 Route::middleware('auth:sanctum')->group(function () {
-
+    Route::prefix('pembayaran')->group(function () {
+        Route::get('/status-bulan-ini', [PembayaranController::class, 'statusBulanIni']);
+        Route::post('/upload-bukti', [PembayaranController::class, 'uploadBukti']);
+        Route::get('/riwayat', [PembayaranController::class, 'riwayat']);
+        Route::get('/detail/{id}', [PembayaranController::class, 'detail']);
+    });
+    
     // JENIS SURAT
     Route::post('/jenis-surat', [JenisSuratController::class, 'store']);
     Route::delete('/jenis-surat/{id}', [JenisSuratController::class, 'destroy']);

@@ -7,40 +7,69 @@ use App\Models\Pengaduan;
 
 class PengaduanController extends Controller
 {
-    // ========== WARGA ==========
-    // Kirim pengaduan baru
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'description' => 'required|string',
-            'image' => 'nullable|image|max:2048',
-        ]);
+  // Create pengaduan baru (warga)
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'location' => 'required|string|max:255',
+        'description' => 'required|string',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+    ]);
 
-        $validated['user_id'] = $request->user()->id;
-        $validated['status'] = 'pending';
-
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('pengaduan', 'public');
-        }
-
-        $pengaduan = Pengaduan::create($validated);
-
-        return response()->json([
-            'message' => 'Pengaduan berhasil dikirim',
-            'data' => $pengaduan
-        ], 201);
+    $imagePath = null;
+    if ($request->hasFile('image')) {
+        $imagePath = $request->file('image')->store('pengaduan', 'public');
     }
+
+    $pengaduan = Pengaduan::create([
+        'user_id' => $request->user()->id,
+        'title' => $validated['title'],
+        'location' => $validated['location'],
+        'description' => $validated['description'],
+        'image' => $imagePath,
+        'status' => 'pending',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Pengaduan berhasil dikirim',
+        'data' => [
+            'id' => $pengaduan->id,
+            'title' => $pengaduan->title,
+            'location' => $pengaduan->location,
+            'description' => $pengaduan->description,
+            'image' => $pengaduan->image ? 'api/pengaduan/' . basename($pengaduan->image) : null, // ✅ Tambah api/ prefix
+            'status' => $pengaduan->status,
+            'created_at' => $pengaduan->created_at->format('Y-m-d H:i'),
+        ]
+    ], 201);
+}
 
     // Warga lihat daftar pengaduan miliknya
-    public function indexWarga(Request $request)
-    {
-        $pengaduan = Pengaduan::where('user_id', $request->user()->id)
-            ->latest()->get();
+   // Warga lihat daftar pengaduan miliknya
+public function indexWarga(Request $request)
+{
+    $pengaduan = Pengaduan::where('user_id', $request->user()->id)
+        ->latest()->get();
 
-        return response()->json(['data' => $pengaduan]);
-    }
+    return response()->json([
+        'data' => $pengaduan->map(function ($p) {
+            return [
+                'id' => $p->id,
+                'title' => $p->title,
+                'location' => $p->location,
+                'description' => $p->description,
+                'image' => $p->image ? 'api/pengaduan/' . basename($p->image) : null, // ✅ Tambah api/ prefix
+                'status' => $p->status,
+                'feedback' => $p->feedback,
+                'created_at' => $p->created_at->format('Y-m-d H:i'),
+                'updated_at' => $p->updated_at->format('Y-m-d H:i'),
+            ];
+        })
+    ]);
+}
+
 
     // ========== RT ==========
     // RT lihat daftar pengaduan pending

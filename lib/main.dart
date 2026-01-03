@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 
-// FRONTEND (WARGA)
+// ========== UNIVERSAL PAGES (untuk semua role) ==========
 import 'pages/login_page.dart';
+import 'pages/profile_page.dart';
+import 'pages/layanan_administrasi_page.dart'; // ✅ UNIFIED
+import 'pages/riwayat_page.dart'; // ✅ UNIFIED (yang baru lu bikin)
+
+// ========== WARGA PAGES ==========
 import 'pages/dashboard_page.dart';
 import 'pages/layanan_surat_page.dart';
 import 'pages/layanan_pengaduan_page.dart';
-import 'pages/layanan_administrasi_page.dart';
 
-// SECURITY
+// ========== SECURITY PAGES ==========
 import 'pages/dashboard_security_page.dart';
-import 'pages/layanan_pengaduan_security_page.dart'; // ✅ ganti nama file sesuai final class
-import 'pages/layanan_administrasi_security.dart';
+import 'pages/layanan_pengaduan_security_page.dart';
 
-// RT / RW
+// ========== RT/RW PAGES ==========
 import 'pages/dashboard_page_rt.dart';
-import 'pages/riwayat_page_rt.dart';
 import 'pages/layanan_surat_page_rt.dart';
 import 'pages/layanan_pengaduan_page_rt.dart' as LayananPengaduanRT;
-import 'pages/layanan_administrasi_page_rt.dart';
+import 'package:intl/date_symbol_data_local.dart'; // TAMBAHKAN
 
-// UNIVERSAL PROFILE PAGE
-import 'pages/profile_page.dart';
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null); // TAMBAHKAN
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -40,11 +40,11 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       initialRoute: '/login',
-
       routes: {
+        // ========== AUTH ==========
         '/login': (context) => const LoginPage(),
 
-        // ✅ DASHBOARD WARGA
+        // ========== WARGA ROUTES ==========
         '/dashboard': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return DashboardPage(
@@ -60,15 +60,8 @@ class MyApp extends StatelessWidget {
             role: args['role'],
           );
         },
-        '/layananAdministrasi': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return LayananAdministrasiPage(
-            token: args['token'],
-            role: args['role'],
-          );
-        },
 
-        // ✅ SECURITY
+        // ========== SECURITY ROUTES ==========
         '/dashboardSecurity': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return DashboardSecurityPage(
@@ -85,27 +78,11 @@ class MyApp extends StatelessWidget {
           );
         },
 
-        '/layananAdministrasiSecurity': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return LayananAdministrasiSecurityPage(
-            token: args['token'],
-            role: args['role'],
-          );
-        },
-
-        // ✅ DASHBOARD RT / RW
+        // ========== RT/RW ROUTES ==========
         '/rtDashboard': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return DashboardPageRT(
-            tokenRT: args['tokenRT'],
-            role: args['role'], // ✅ bisa "rt" atau "rw"
-          );
-        },
-
-        '/riwayatRT': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return RiwayatPageRT(
-            tokenRT: args['tokenRT'],
+            tokenRT: args['tokenRT'] ?? args['token'],
             role: args['role'],
           );
         },
@@ -113,31 +90,43 @@ class MyApp extends StatelessWidget {
         '/layananPengaduanRT': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return LayananPengaduanRT.LayananPengaduanPageRT(
-            tokenRT: args['tokenRT'],
+            tokenRT: args['tokenRT'] ?? args['token'],
             role: args['role'],
           );
         },
 
-        '/layananAdministrasiRT': (context) {
+        // ========== UNIVERSAL ROUTES (semua role) ==========
+
+        '/layananAdministrasi': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return LayananAdministrasiPageRT(
-            tokenRT: args['tokenRT'],
-            role: args['role'],
+          return LayananAdministrasiPage(
+            token: args['token'] ?? args['tokenRT'] ?? '',
+            role: args['role'] ?? 'warga',
           );
         },
 
-        // ✅ UNIVERSAL PROFILE PAGE
+        // ✅ RIWAYAT (UNIFIED)
+        '/riwayat': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return RiwayatPage(
+            token: args['token'] ?? args['tokenRT'] ?? '',
+            role: args['role'] ?? 'warga',
+          );
+        },
+
+        // ✅ PROFILE (UNIFIED)
         '/profile': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return ProfilePage(
-            token: args['token'] ?? args['tokenRT'],
-            role: args['role'],
+            token: args['token'] ?? args['tokenRT'] ?? '',
+            role: args['role'] ?? 'warga',
           );
         },
       },
 
-      // ✅ ROUTE DINAMIS UNTUK SURAT
+      // ========== DYNAMIC ROUTES ==========
       onGenerateRoute: (settings) {
+        // Layanan Surat Warga
         if (settings.name == '/layananSurat') {
           final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
@@ -148,16 +137,18 @@ class MyApp extends StatelessWidget {
           );
         }
 
+        // Layanan Surat RT/RW
         if (settings.name == '/layananSuratRT') {
           final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (_) => LayananSuratPageRT(
-              tokenRT: args['tokenRT'],
-              role: args['role'], // ✅ RT atau RW
+              tokenRT: args['tokenRT'] ?? args['token'],
+              role: args['role'],
             ),
           );
         }
 
+        // 404 Page
         return MaterialPageRoute(
           builder: (_) => const NotFoundPage(),
         );
@@ -166,17 +157,56 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// ========== 404 PAGE ==========
 class NotFoundPage extends StatelessWidget {
   const NotFoundPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Page Not Found')),
-      body: const Center(
-        child: Text(
-          '404: Halaman Tidak Ditemukan',
-          style: TextStyle(fontSize: 18),
+      appBar: AppBar(
+        title: const Text('Halaman Tidak Ditemukan'),
+        backgroundColor: const Color(0xFF164E47),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 80,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '404',
+              style: TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Halaman Tidak Ditemukan',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+              icon: const Icon(Icons.home),
+              label: const Text('Kembali ke Login'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF164E47),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
