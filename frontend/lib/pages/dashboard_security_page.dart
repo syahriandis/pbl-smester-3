@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout_security.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DashboardSecurityPage extends StatelessWidget {
   final String token;
@@ -49,7 +50,7 @@ class DashboardSecurityPage extends StatelessWidget {
                       radius: 20,
                       backgroundImage:
                           const AssetImage('assets/images/avatar.jpg'),
-                      backgroundColor: Colors.grey[200],
+                      backgroundColor: primaryColor,
                     ),
                   ],
                 ),
@@ -79,59 +80,34 @@ class DashboardSecurityPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Forum komunikasi
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: secondaryColor,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                        border: Border.all(
-                          color: Colors.grey.shade200,
-                          width: 1,
-                        ),
+                    // ✅ Forum Komunikasi WA (tampilan khusus hijau)
+                    _buildServiceCard(
+                      context: context,
+                      icon: SvgPicture.asset(
+                        'assets/icons/whatsapp.svg',
+                        width: 32,
+                        height: 32,
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: SvgPicture.asset(
-                                'assets/icons/whatsapp.svg',
-                                width: 40,
-                                height: 40,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'Forum Komunikasi Warga',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          const Icon(
-                            Icons.chevron_right,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ],
-                      ),
+                      title: 'Forum Komunikasi Warga',
+                      subtitle: 'Bergabung di grup WhatsApp',
+                      onTap: () async {
+                        const whatsappUrl =
+                           'https://chat.whatsapp.com/ER0GjJkTUCl2NaLU7D9eNi';
+                        if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
+                          await launchUrl(
+                            Uri.parse(whatsappUrl),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Tidak dapat membuka WhatsApp')),
+                          );
+                        }
+                      },
+                      backgroundColor: primaryColor,
+                      titleColor: whiteColor,
+                      subtitleColor: Colors.white70,
                     ),
 
                     const SizedBox(height: 24),
@@ -153,7 +129,7 @@ class DashboardSecurityPage extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    // ✅ LAYANAN SURAT (TOKEN ASLI)
+                    // Layanan Surat
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -176,7 +152,7 @@ class DashboardSecurityPage extends StatelessWidget {
 
                     const SizedBox(height: 12),
 
-                    // ✅ ADMINISTRASI SECURITY
+                    // Layanan Administrasi Security
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -189,13 +165,17 @@ class DashboardSecurityPage extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           '/layananAdministrasiSecurity',
+                          arguments: {
+                            'role': role,
+                            'token': token,
+                          },
                         );
                       },
                     ),
 
                     const SizedBox(height: 12),
 
-                    // ✅ PENGADUAN WARGA
+                    // Pengaduan Warga
                     _buildServiceCard(
                       context: context,
                       icon: const Icon(Icons.report,
@@ -206,6 +186,10 @@ class DashboardSecurityPage extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           '/layananPengaduanWarga',
+                          arguments: {
+                            'role': role,
+                            'token': token,
+                          },
                         );
                       },
                     ),
@@ -221,12 +205,16 @@ class DashboardSecurityPage extends StatelessWidget {
     );
   }
 
+  // Service Card reusable dengan opsi warna
   Widget _buildServiceCard({
     required BuildContext context,
     required Widget icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Color backgroundColor = whiteColor,
+    Color titleColor = primaryColor,
+    Color subtitleColor = Colors.grey,
   }) {
     return Material(
       color: Colors.transparent,
@@ -236,7 +224,7 @@ class DashboardSecurityPage extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: whiteColor,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
@@ -264,10 +252,10 @@ class DashboardSecurityPage extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: primaryColor,
+                        color: titleColor,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -275,13 +263,17 @@ class DashboardSecurityPage extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey.shade600,
+                        color: subtitleColor,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: primaryColor, size: 24),
+              Icon(Icons.chevron_right,
+                  color: backgroundColor == primaryColor
+                      ? whiteColor
+                      : primaryColor,
+                  size: 24),
             ],
           ),
         ),

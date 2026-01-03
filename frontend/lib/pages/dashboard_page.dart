@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DashboardPage extends StatelessWidget {
   final String token;
@@ -18,7 +19,7 @@ class DashboardPage extends StatelessWidget {
     print("TOKEN DARI LOGIN (DASHBOARD): $token");
     print("ROLE DARI LOGIN (DASHBOARD): $role");
 
-   return MainLayout(
+    return MainLayout(
       selectedIndex: 0,
       token: token,
       role: role,
@@ -30,9 +31,17 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context) {
+    // Greeting dinamis sesuai role
+    final String greetingTitle = role == "rw"
+        ? "Selamat Datang Ketua RW 01"
+        : role == "rt"
+            ? "Selamat Datang Ketua RT 01"
+            : "Selamat Datang Warga";
+
     return SafeArea(
       child: Column(
         children: [
+          // HEADER
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -53,9 +62,9 @@ class DashboardPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Selamat Datang Dwiky Putra',
-                  style: TextStyle(
+                Text(
+                  greetingTitle,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: whiteColor,
@@ -65,6 +74,7 @@ class DashboardPage extends StatelessWidget {
             ),
           ),
 
+          // BODY
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -77,6 +87,38 @@ class DashboardPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ✅ Forum Komunikasi Warga (tampilan khusus hijau)
+                    _buildServiceCard(
+                      context: context,
+                      icon: SvgPicture.asset(
+                        'assets/icons/whatsapp.svg',
+                        width: 32,
+                        height: 32,
+                      ),
+                      title: 'Forum Komunikasi',
+                      subtitle: 'Bergabung di grup WhatsApp warga',
+                      onTap: () async {
+                        const whatsappUrl =
+                            'https://chat.whatsapp.com/ER0GjJkTUCl2NaLU7D9eNi'; 
+                        if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
+                          await launchUrl(
+                            Uri.parse(whatsappUrl),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Tidak dapat membuka WhatsApp')),
+                          );
+                        }
+                      },
+                      backgroundColor: primaryColor,
+                      titleColor: whiteColor,
+                      subtitleColor: Colors.white70,
+                    ),
+
+                    const SizedBox(height: 24),
+
                     // ✅ Layanan Surat
                     _buildServiceCard(
                       context: context,
@@ -110,7 +152,14 @@ class DashboardPage extends StatelessWidget {
                       title: 'Layanan Pengaduan',
                       subtitle: 'Forum pengaduan dengan mengisi form',
                       onTap: () {
-                        Navigator.pushNamed(context, '/layananPengaduan');
+                        Navigator.pushNamed(
+                          context,
+                          '/layananPengaduan',
+                          arguments: {
+                            'role': role,
+                            'token': token,
+                          },
+                        );
                       },
                     ),
 
@@ -126,9 +175,18 @@ class DashboardPage extends StatelessWidget {
                       title: 'Layanan Administrasi',
                       subtitle: 'Dapat membayar uang iuran dan sebagainya',
                       onTap: () {
-                        Navigator.pushNamed(context, '/layananAdministrasi');
+                        Navigator.pushNamed(
+                          context,
+                          '/layananAdministrasi',
+                          arguments: {
+                            'role': role,
+                            'token': token,
+                          },
+                        );
                       },
                     ),
+
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -139,12 +197,16 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
+  // Service Card reusable
   Widget _buildServiceCard({
     required BuildContext context,
     required Widget icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Color backgroundColor = whiteColor,
+    Color titleColor = primaryColor,
+    Color subtitleColor = Colors.grey,
   }) {
     return Material(
       color: Colors.transparent,
@@ -154,7 +216,7 @@ class DashboardPage extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: whiteColor,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
@@ -182,10 +244,10 @@ class DashboardPage extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: primaryColor,
+                        color: titleColor,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -193,13 +255,17 @@ class DashboardPage extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey.shade600,
+                        color: subtitleColor,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: primaryColor, size: 24),
+              Icon(Icons.chevron_right,
+                  color: backgroundColor == primaryColor
+                      ? whiteColor
+                      : primaryColor,
+                  size: 24),
             ],
           ),
         ),

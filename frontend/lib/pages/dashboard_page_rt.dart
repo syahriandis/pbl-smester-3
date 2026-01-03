@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:login_tes/constants/colors.dart';
 import 'package:login_tes/widgets/main_layout_rt.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DashboardPageRT extends StatelessWidget {
   final String tokenRT;
-  final String role; // ✅ bisa "rt" atau "rw"
+  final String role;
 
   const DashboardPageRT({
     super.key,
@@ -20,7 +21,7 @@ class DashboardPageRT extends StatelessWidget {
     return MainLayoutRT(
       selectedIndex: 0,
       tokenRT: tokenRT,
-      role: role, // ✅ diteruskan ke layout
+      role: role, 
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
         child: _buildBody(context),
@@ -29,14 +30,13 @@ class DashboardPageRT extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context) {
-    // ✅ Judul dinamis berdasarkan role
     final String greetingTitle =
         role == "rw" ? "Selamat Datang Ketua RW 01" : "Selamat Datang Ketua RT 01";
 
     return SafeArea(
       child: Column(
         children: [
-          // ✅ HEADER
+          // HEADER
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -56,8 +56,6 @@ class DashboardPageRT extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-
-                // ✅ Judul dinamis
                 Text(
                   greetingTitle,
                   style: const TextStyle(
@@ -70,7 +68,7 @@ class DashboardPageRT extends StatelessWidget {
             ),
           ),
 
-          // ✅ BODY
+          // BODY
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -83,59 +81,30 @@ class DashboardPageRT extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ✅ FORUM
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: secondaryColor,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                        border: Border.all(
-                          color: Colors.grey.shade200,
-                          width: 1,
-                        ),
+                    // FORUM KOMUNIKASI RT (HIJAU)
+                    _buildServiceCard(
+                      context: context,
+                      icon: SvgPicture.asset(
+                        'assets/icons/whatsapp.svg'
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: SvgPicture.asset(
-                                'assets/icons/whatsapp.svg',
-                                width: 40,
-                                height: 40,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'Forum Komunikasi',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          const Icon(
-                            Icons.chevron_right,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ],
-                      ),
+                      title: 'Forum Komunikasi',
+                      subtitle: 'Bergabung di grup WhatsApp ',
+                      backgroundColor: primaryColor, // background hijau
+                      titleColor: whiteColor,
+                      subtitleColor: Colors.white70,
+                      onTap: () async {
+                        const whatsappUrl = 'https://chat.whatsapp.com/ER0GjJkTUCl2NaLU7D9eNi'; // ganti link WA RT
+                        if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
+                          await launchUrl(
+                            Uri.parse(whatsappUrl),
+                            mode: LaunchMode.externalApplication,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Tidak dapat membuka WhatsApp')),
+                          );
+                        }
+                      },
                     ),
 
                     const SizedBox(height: 24),
@@ -157,7 +126,7 @@ class DashboardPageRT extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    // ✅ LAYANAN SURAT
+                    // Layanan Surat
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -172,7 +141,7 @@ class DashboardPageRT extends StatelessWidget {
                           '/layananSuratRT',
                           arguments: {
                             'tokenRT': tokenRT,
-                            'role': role, // ✅ penting
+                            'role': role,
                           },
                         );
                       },
@@ -180,7 +149,7 @@ class DashboardPageRT extends StatelessWidget {
 
                     const SizedBox(height: 12),
 
-                    // ✅ LAYANAN PENGADUAN
+                    // Layanan Pengaduan
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -203,7 +172,7 @@ class DashboardPageRT extends StatelessWidget {
 
                     const SizedBox(height: 12),
 
-                    // ✅ LAYANAN ADMINISTRASI
+                    // Layanan Administrasi
                     _buildServiceCard(
                       context: context,
                       icon: const Image(
@@ -241,6 +210,9 @@ class DashboardPageRT extends StatelessWidget {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Color backgroundColor = whiteColor,
+    Color titleColor = primaryColor,
+    Color subtitleColor = Colors.grey,
   }) {
     return Material(
       color: Colors.transparent,
@@ -250,7 +222,7 @@ class DashboardPageRT extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: whiteColor,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
@@ -278,10 +250,10 @@ class DashboardPageRT extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: primaryColor,
+                        color: titleColor,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -289,7 +261,7 @@ class DashboardPageRT extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey.shade600,
+                        color: subtitleColor,
                       ),
                     ),
                   ],
